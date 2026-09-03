@@ -351,11 +351,20 @@ This is how the portal is published today. The site is served straight from the
 `main` branch of the public `hiufsitake/Spinpro` repo:
 
 1. Repo **Settings → Pages**
-2. **Source:** *Deploy from a branch*
-3. **Branch:** `main`, folder `/ (root)` → **Save**
+2. **Source:** *GitHub Actions*
 
-Live at **https://hiufsitake.github.io/Spinpro/**, and every push to `main`
-redeploys automatically (first build takes a minute or two).
+`.github/workflows/deploy-pages.yml` does the rest — it uploads the repo root
+verbatim (no build step) and deploys it on every push to `main`. Progress and
+failures are visible in the **Actions** tab, which a branch deploy does not give
+you.
+
+Live at **https://hiufsitake.github.io/Spinpro/**; the first run takes a minute
+or two.
+
+> A 404 saying *"There isn't a GitHub Pages site here"* while Pages is enabled
+> almost always means the source is set to *GitHub Actions* but no workflow has
+> published anything yet — check the Actions tab. The other cause is a run that
+> failed.
 
 Notes specific to Pages hosting:
 
