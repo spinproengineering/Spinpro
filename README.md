@@ -17,7 +17,7 @@ served by a Cloudflare Worker. Installable as a PWA on iOS and Android.
 
 ## Live site
 
-**https://hiufsitake.github.io/Spinpro/** — served by GitHub Pages from `main`,
+**https://spinproengineering.github.io/Spinpro/** — served by GitHub Pages from `main`,
 redeployed on every push.
 
 The site lives under the `/Spinpro/` subpath, so every path in this repo is

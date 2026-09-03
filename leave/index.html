@@ -293,6 +293,11 @@ function showPreviewBanner() {
 // createClient throws on a placeholder URL, which would leave the page hidden.
 const sb = PREVIEW_MODE ? null : createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
 
+// Portal URL for email links, derived at runtime from wherever this page is
+// actually served. Survives a GitHub account transfer, a repo rename and a
+// custom domain with no code change.
+const PORTAL_URL = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
+
 const ADMIN_EMAILS = ['YOUR_ADMIN_EMAIL', 'YOUR_FINANCE_EMAIL'];
 
 // ===== EmailJS (SpinPro) — leave notifications =====
@@ -307,7 +312,7 @@ async function notifyLeave(title, color, to_email, to_name, html_body, remark, c
     await emailjs.send(EMAIL_SERVICE, EMAIL_TEMPLATE, {
       system_name: 'SPINPRO LEAVE', to_email, to_name: to_name || to_email.split('@')[0],
       header_bg: color, title, html_body, remark_text: remark,
-      cta_url: 'https://hiufsitake.github.io/Spinpro/leave/', cta_label: cta_label || 'Open SpinPro Portal'
+      cta_url: PORTAL_URL, cta_label: cta_label || 'Open SpinPro Portal'
     });
   } catch (e) { console.error('Leave email failed:', e); }
 }

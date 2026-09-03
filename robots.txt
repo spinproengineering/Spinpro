@@ -3,4 +3,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://hiufsitake.github.io/Spinpro/sitemap.xml
+Sitemap: https://spinproengineering.github.io/Spinpro/sitemap.xml

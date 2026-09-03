@@ -250,7 +250,7 @@ CREATE POLICY "auth_all" ON settings     FOR ALL TO authenticated USING (true) W
 
 In Supabase → Authentication → Settings:
 - Enable **Email** provider
-- Set **Site URL** to your deployed domain (`https://hiufsitake.github.io/Spinpro`)
+- Set **Site URL** to your deployed domain (`https://spinproengineering.github.io/Spinpro`)
 - Add redirect URLs if using magic links
 
 ---
@@ -328,7 +328,7 @@ only signed-in staff can spend your quota.
 
 **Weaker fallback — restrict the key.** If you do put it client-side, first go to
 Google Cloud Console → Credentials and restrict the key to the Generative
-Language API with an HTTP-referrer restriction for `https://hiufsitake.github.io/*`.
+Language API with an HTTP-referrer restriction for `https://spinproengineering.github.io/*`.
 That limits, but does not prevent, abuse. Set a billing budget and alert either
 way. A client-side key is visible to anyone who opens DevTools regardless of
 whether the repo is public.
@@ -376,7 +376,7 @@ Or build an admin UI entry form as a future enhancement.
 ### Option A — GitHub Pages (current setup)
 
 This is how the portal is published today. The site is served straight from the
-`main` branch of the public `hiufsitake/Spinpro` repo:
+`main` branch of the public `spinproengineering/Spinpro` repo:
 
 1. Repo **Settings → Pages**
 2. **Source:** *GitHub Actions*
@@ -386,7 +386,7 @@ verbatim (no build step) and deploys it on every push to `main`. Progress and
 failures are visible in the **Actions** tab, which a branch deploy does not give
 you.
 
-Live at **https://hiufsitake.github.io/Spinpro/**; the first run takes a minute
+Live at **https://spinproengineering.github.io/Spinpro/**; the first run takes a minute
 or two.
 
 > A 404 saying *"There isn't a GitHub Pages site here"* while Pages is enabled
@@ -446,10 +446,22 @@ Skip this section until SpinPro's domain is on Cloudflare. The domain must be a
    required for a Workers custom domain.
 3. Confirm under **Workers & Pages → spinpro → Settings → Domains & Routes**
    that the hostname is listed and Active.
-4. Set the Supabase **Site URL** and redirect URLs to the same origin (§3.5),
-   and search the repo for `github.io/Spinpro` — the current Pages origin is
-   baked into the email notification links in `po/`, `cashclaim/`,
-   `staffclaim/` and `leave/`, plus `robots.txt` and `sitemap.xml`.
+4. Set the Supabase **Site URL** and redirect URLs to the same origin (§3.5).
+   The module email links need no change — they derive the origin at runtime
+   (see below) — but `robots.txt` and `sitemap.xml` carry a literal URL.
+
+> **Moving the portal between accounts, repos or domains.** The approval emails
+> sent by `po/`, `cashclaim/`, `staffclaim/` and `leave/` build their links from
+> `PORTAL_URL`, computed at load time from `window.location`:
+>
+> ```javascript
+> const PORTAL_URL = window.location.origin +
+>     window.location.pathname.replace(/[^/]*$/, '');
+> ```
+>
+> So a GitHub account transfer, a repo rename or a custom domain needs no code
+> change — links always point back at wherever the page was actually served
+> from. Only `robots.txt` and `sitemap.xml` hold a literal origin.
 
 > Every hostname the portal answers on must be listed in `wrangler.toml`: on each
 > deploy Cloudflare reconciles the Worker's domains to exactly that list, so a
@@ -529,7 +541,7 @@ Before putting a real key in, do one of these:
 
 - **Restrict the key** in Google Cloud Console → Credentials → API restrictions:
   limit it to the Generative Language API, and add an HTTP-referrer restriction
-  for `https://hiufsitake.github.io/*`. A restricted key is far less useful to a
+  for `https://spinproengineering.github.io/*`. A restricted key is far less useful to a
   scraper. This is the minimum.
 - **Proxy it** — move the Gemini call behind a Supabase Edge Function that holds
   the key server-side. The browser never sees it. This is the only approach that
@@ -568,7 +580,7 @@ each occurrence.
 | `YOUR_ADMIN_EMAIL` | `index.html`, `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
 | `YOUR_FINANCE_EMAIL` | `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
 | `YOUR_COMPANY_EMAIL`, `YOUR_COMPANY_ADDRESS`, `YOUR_COMPANY_TEL`, `YOUR_SSM_REG_NUMBER` | `CO` object in `po/`, `cashclaim/`, `staffclaim/` |
-| `https://hiufsitake.github.io/Spinpro` (current origin) | email notification links in `po/`, `cashclaim/`, `staffclaim/`, `leave/`; `robots.txt`; `sitemap.xml` — update all of these if you move off Pages |
+| *(none — module email links derive the origin at runtime)* | `robots.txt` and `sitemap.xml` still carry a literal origin; update those two if you move hosts |
 
 Then:
 
