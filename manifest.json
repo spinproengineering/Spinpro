@@ -1,26 +1,26 @@
 {
-  "name": "SpinPro Staff Claim",
-  "short_name": "SPN SC",
-  "start_url": "./",
+  "name": "SpinPro Portal",
+  "short_name": "SpinPro",
+  "start_url": ".",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0d5339",
   "icons": [
     {
-      "src": "../icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "../icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "../icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

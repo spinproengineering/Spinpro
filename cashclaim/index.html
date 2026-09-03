@@ -19,28 +19,11 @@
     <title>SpinPro | Cash Claim</title>
     <script>
         document.documentElement.style.display='none';
-        const GUARD_URL='YOUR_SUPABASE_URL';
-        const GUARD_KEY='YOUR_SUPABASE_ANON_KEY';
+        const GUARD_URL='https://ugvehqkqsvolpdqwaggg.supabase.co';
+        const GUARD_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
 
-        // PREVIEW MODE — see index.html. Active only while Supabase is
-        // unconfigured; a real SUPABASE_URL restores the session guard.
-        const PREVIEW_MODE = String(GUARD_URL || '').indexOf('http') !== 0;
-        function showPreviewBanner() {
-            if (!PREVIEW_MODE) return;
-            const add = () => {
-                if (document.getElementById('preview-banner')) return;
-                const el = document.createElement('div');
-                el.id = 'preview-banner';
-                el.className = 'fixed top-0 left-0 right-0 z-50 bg-[#8ab52a] text-[#0d2b12] text-center px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-lg';
-                el.textContent = 'Preview mode — login bypassed, no database connected';
-                document.body.appendChild(el);
-                document.body.style.paddingTop = '2.25rem';
-            };
-            if (document.body) add();
-            else document.addEventListener('DOMContentLoaded', add);
-        }
-        const guardClient=PREVIEW_MODE?null:supabase.createClient(GUARD_URL,GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
-        async function checkSession(){if(PREVIEW_MODE){document.documentElement.style.display='';showPreviewBanner();return;}const{data:{session}}=await guardClient.auth.getSession();if(!session)window.location.href='../index.html';else document.documentElement.style.display='';}
+        const guardClient=supabase.createClient(GUARD_URL,GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        async function checkSession(){const{data:{session}}=await guardClient.auth.getSession();if(!session)window.location.href='../index.html';else document.documentElement.style.display='';}
         checkSession();
     </script>
     <style>
@@ -149,13 +132,13 @@
     </main>
 
     <script>
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const SUPABASE_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
         const EMAIL_SERVICE  = 'YOUR_EMAILJS_SERVICE_ID';
         const EMAIL_TEMPLATE = 'YOUR_EMAILJS_TEMPLATE_ID';
         const EMAIL_KEY      = 'YOUR_EMAILJS_PUBLIC_KEY';
-        const ADMIN_EMAILS   = ['YOUR_ADMIN_EMAIL', 'YOUR_FINANCE_EMAIL'];
-        const APPROVER_MAP   = { 'YOUR_ADMIN_EMAIL': 'HFS', 'YOUR_FINANCE_EMAIL': 'FIN' };
+        const ADMIN_EMAILS   = ['spinproengineering@gmail.com'];
+        const APPROVER_MAP   = { 'spinproengineering@gmail.com': 'ADMIN' };
 
         // Portal URL for email links, derived at runtime from wherever this page
         // is actually served. Survives a GitHub account transfer, a repo rename
@@ -172,7 +155,7 @@
             tel:  'YOUR_COMPANY_TEL'
         };
 
-        const supabaseClient=PREVIEW_MODE?null:supabase.createClient(SUPABASE_URL,SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
         const formatRM=n=>parseFloat(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
         const mkRow=(l,v)=>`<tr><td style="padding:12px 0;border-bottom:1px solid #eef2f6;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${l}</td><td style="padding:12px 0;border-bottom:1px solid #eef2f6;color:#0f172a;font-size:14px;font-weight:800;text-align:right">${v}</td></tr>`;
 
@@ -390,7 +373,7 @@
             if(editingId)res=await supabaseClient.from('cash_claims').update(payload).eq('id',editingId);
             else res=await supabaseClient.from('cash_claims').insert(payload);
             if(!res.error){
-                ['YOUR_ADMIN_EMAIL','YOUR_FINANCE_EMAIL'].forEach(to_email=>emailjs.send(EMAIL_SERVICE,EMAIL_TEMPLATE,{system_name:'SPINPRO CASH CLAIM',header_bg:'#0e6091',title:editingId?'Claim Resubmitted':'New Cash Claim',to_email,to_name:'Approver',html_body:mkRow('Claim No',payload.claim_number)+mkRow('Claimant',payload.claimant_name)+mkRow('Total','RM '+formatRM(payload.total_amount)),remark_text:'A cash claim needs your review. Click below to open it in the portal.',cta_url:PORTAL_URL,cta_label:'Review & Approve'}));
+                ['spinproengineering@gmail.com'].forEach(to_email=>emailjs.send(EMAIL_SERVICE,EMAIL_TEMPLATE,{system_name:'SPINPRO CASH CLAIM',header_bg:'#0e6091',title:editingId?'Claim Resubmitted':'New Cash Claim',to_email,to_name:'Approver',html_body:mkRow('Claim No',payload.claim_number)+mkRow('Claimant',payload.claimant_name)+mkRow('Total','RM '+formatRM(payload.total_amount)),remark_text:'A cash claim needs your review. Click below to open it in the portal.',cta_url:PORTAL_URL,cta_label:'Review & Approve'}));
                 alert(editingId?'Claim Updated.':'Claim Submitted.');cancelEdit();
                 if(isAuthorized)fetchRecords();
             }else alert('Error: '+res.error.message);

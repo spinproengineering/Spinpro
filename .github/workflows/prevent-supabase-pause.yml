@@ -13,12 +13,12 @@ jobs:
       - name: Ping Supabase Database
         env:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          PROJECT_ID: YOUR_SUPABASE_PROJECT_REF
+          PROJECT_ID: ugvehqkqsvolpdqwaggg
         run: |
-          # Until the SpinPro Supabase project exists, PROJECT_ID is still the
-          # placeholder — skip instead of failing the run every hour.
-          if [ "$PROJECT_ID" = "YOUR_SUPABASE_PROJECT_REF" ] || [ -z "$SUPABASE_KEY" ]; then
-            echo "Supabase project not configured yet (PROJECT_ID=$PROJECT_ID). Skipping."
+          # The SUPABASE_KEY repo secret (the anon key) is what remains optional:
+          # skip instead of failing the run every hour until it is set.
+          if [ -z "$SUPABASE_KEY" ]; then
+            echo "SUPABASE_KEY secret not set. Skipping."
             exit 0
           fi
 

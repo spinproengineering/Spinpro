@@ -16,29 +16,11 @@
 
     <script>
         document.documentElement.style.display = 'none';
-        const GUARD_URL = 'YOUR_SUPABASE_URL';
-        const GUARD_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const GUARD_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
+        const GUARD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
 
-        // PREVIEW MODE — see index.html. Active only while Supabase is
-        // unconfigured; a real SUPABASE_URL restores the session guard.
-        const PREVIEW_MODE = String(GUARD_URL || '').indexOf('http') !== 0;
-        function showPreviewBanner() {
-            if (!PREVIEW_MODE) return;
-            const add = () => {
-                if (document.getElementById('preview-banner')) return;
-                const el = document.createElement('div');
-                el.id = 'preview-banner';
-                el.className = 'fixed top-0 left-0 right-0 z-50 bg-[#8ab52a] text-[#0d2b12] text-center px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-lg';
-                el.textContent = 'Preview mode — login bypassed, no database connected';
-                document.body.appendChild(el);
-                document.body.style.paddingTop = '2.25rem';
-            };
-            if (document.body) add();
-            else document.addEventListener('DOMContentLoaded', add);
-        }
-        const guardClient = PREVIEW_MODE ? null : supabase.createClient(GUARD_URL, GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        const guardClient = supabase.createClient(GUARD_URL, GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
         async function checkSession() {
-            if (PREVIEW_MODE) { document.documentElement.style.display = ''; showPreviewBanner(); return; }
             const { data: { session } } = await guardClient.auth.getSession();
             if (!session) window.location.href = '../index.html';
             else document.documentElement.style.display = '';
@@ -136,11 +118,11 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-        const supabaseClient = PREVIEW_MODE ? null : supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        const SUPABASE_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
 
-        const ADMIN_EMAILS = ['YOUR_ADMIN_EMAIL', 'YOUR_FINANCE_EMAIL'];
+        const ADMIN_EMAILS = ['spinproengineering@gmail.com'];
         let staffDatabase = [], isAuthorized = false, pendingDeleteId = null;
 
         async function init() {

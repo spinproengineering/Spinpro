@@ -274,31 +274,19 @@
 </div>
 
 <script>
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
 const { createClient } = supabase;
 
-// PREVIEW MODE — see index.html. Active only while Supabase is unconfigured;
-// a real SUPABASE_URL restores the session guard in init().
-const PREVIEW_MODE = String(SUPABASE_URL || '').indexOf('http') !== 0;
-function showPreviewBanner() {
-  if (!PREVIEW_MODE || document.getElementById('preview-banner')) return;
-  const el = document.createElement('div');
-  el.id = 'preview-banner';
-  el.className = 'fixed top-0 left-0 right-0 z-50 bg-[#8ab52a] text-[#0d2b12] text-center px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-lg';
-  el.textContent = 'Preview mode — login bypassed, no database connected';
-  document.body.appendChild(el);
-  document.body.style.paddingTop = '2.25rem';
-}
 // createClient throws on a placeholder URL, which would leave the page hidden.
-const sb = PREVIEW_MODE ? null : createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
 
 // Portal URL for email links, derived at runtime from wherever this page is
 // actually served. Survives a GitHub account transfer, a repo rename and a
 // custom domain with no code change.
 const PORTAL_URL = window.location.origin + window.location.pathname.replace(/[^/]*$/, '');
 
-const ADMIN_EMAILS = ['YOUR_ADMIN_EMAIL', 'YOUR_FINANCE_EMAIL'];
+const ADMIN_EMAILS = ['spinproengineering@gmail.com'];
 
 // ===== EmailJS (SpinPro) — leave notifications =====
 const EMAIL_SERVICE  = 'YOUR_EMAILJS_SERVICE_ID';
@@ -337,13 +325,6 @@ let currentYear = new Date().getFullYear();
 
 // ---- Auth ----
 async function init() {
-  if (PREVIEW_MODE) {
-    document.documentElement.style.display = '';
-    showPreviewBanner();
-    const ue = document.getElementById('userEmail');
-    if (ue) ue.textContent = 'preview@spinpro';
-    return;
-  }
   const { data: { session } } = await sb.auth.getSession();
   if (!session || sessionStorage.getItem('spn_tab_session') !== 'true') {
     window.location.href = '../index.html';
@@ -550,7 +531,7 @@ async function submitLeave(e) {
   if (error) { showToast('Failed to submit: ' + error.message, 'error'); return; }
 
   // Notify all approvers of the new application.
-  for (const appEmail of ['YOUR_ADMIN_EMAIL', 'YOUR_FINANCE_EMAIL']) {
+  for (const appEmail of ['spinproengineering@gmail.com']) {
     await notifyLeave('New Leave Application', '#0e6091', appEmail, 'Approver',
       mkRow('Staff', payload.name) + mkRow('Type', lt) + mkRow('Dates', sd + ' → ' + ed) + mkRow('Days', days),
       'A leave application needs your review. Click below to open it in the portal.', 'Review & Approve');
