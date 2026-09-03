@@ -31,7 +31,7 @@ spinpro/
 pages); the icons are wired into every `manifest.json`. Replace the files
 in place — keep the same names — to swap in higher-resolution artwork.
 
-**Optional — PO letterhead.** `po/index.html` looks for `spinpro letterhead.jpg`
+**Optional — PO letterhead.** `po/index.html` looks for `spinpro letterhead.png`
 at the repo root and, when present, renders it as the full-width header of every
 generated PO PDF. It is not included; without it the PDF falls back to a text
 header built from the `CO` object (§4.2).
