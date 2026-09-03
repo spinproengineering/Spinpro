@@ -52,34 +52,6 @@ All seven are sampled from the SpinPro swirl mark.
 
 ---
 
-## 2b. Preview mode (login bypass)
-
-While Supabase is unconfigured the portal **bypasses login** so you can click
-through the UI. A lime banner reads *"Preview mode — login bypassed, no database
-connected"* on every page.
-
-It is controlled by one line, repeated in each page:
-
-```javascript
-const PREVIEW_MODE = String(SUPABASE_URL || '').indexOf('http') !== 0;
-```
-
-So it is on only while `SUPABASE_URL` is the `YOUR_SUPABASE_URL` placeholder.
-**The moment you paste a real Supabase URL in §3.2, `PREVIEW_MODE` becomes
-false, the banner disappears, and every module enforces the session guard
-again** — it redirects to the login page when there is no session. There is
-nothing to remember to turn off, and no way for the bypass to reach a
-configured deployment.
-
-What preview mode does *not* do: there is no database behind it, so lists are
-empty and nothing saves. It is for looking at layout and navigation.
-
-> If you ever want the portal reachable **only** by staff, note that a static
-> site cannot enforce that — the guard is client-side. Real access control is
-> Supabase Auth plus the RLS policies in §3.4.
-
----
-
 ## 3. Supabase Setup
 
 ### 3.1 Create a new Supabase project
@@ -107,121 +79,24 @@ stops working.
 
 ### 3.3 Run the SQL schema
 
-Go to Supabase → SQL Editor and run the following:
+The schema lives in **[`supabase/schema.sql`](supabase/schema.sql)**. Open it,
+copy the whole file, and paste it into Supabase -> **SQL Editor** -> New query
+-> **Run**. Every statement is idempotent, so re-running it is safe.
 
-```sql
--- ============================================================
--- SPINPRO ENGINEERING SDN. BHD. — Database Schema
--- ============================================================
+It creates seven tables — `staff`, `po_logs`, `cash_claims`, `staff_claims`,
+`logs`, `settings`, `admins` — plus indexes, two helper functions and the Row
+Level Security policies described in 3.4.
 
--- Staff directory (used by Leave & Staff Claim for auto-fill)
-CREATE TABLE IF NOT EXISTS staff (
-  id          BIGSERIAL PRIMARY KEY,
-  email       TEXT UNIQUE NOT NULL,
-  name        TEXT NOT NULL,
-  department  TEXT,
-  position    TEXT,
-  phone       TEXT,
-  join_date   DATE,
-  created_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Purchase Orders
-CREATE TABLE IF NOT EXISTS po_logs (
-  id              BIGSERIAL PRIMARY KEY,
-  po_number       TEXT UNIQUE NOT NULL,   -- SPN-PO-YYYYMMDD-XX
-  requester_email TEXT NOT NULL,
-  requester_name  TEXT,
-  vendor_name     TEXT,
-  vendor_contact  TEXT,
-  vendor_email    TEXT,
-  category        TEXT,
-  items           JSONB DEFAULT '[]',     -- [{desc, qty, unit, price}]
-  subtotal        NUMERIC(12,2),
-  tax             NUMERIC(12,2),
-  total           NUMERIC(12,2),
-  currency        TEXT DEFAULT 'MYR',
-  notes           TEXT,
-  status          TEXT DEFAULT 'Pending', -- Pending | Approved | Rejected | Ordered | Received
-  approved_by     TEXT,
-  approver_note   TEXT,
-  approved_at     TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ DEFAULT NOW(),
-  updated_at      TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Cash Claims
-CREATE TABLE IF NOT EXISTS cash_claims (
-  id              BIGSERIAL PRIMARY KEY,
-  claim_number    TEXT UNIQUE NOT NULL,   -- SPN-CC-YYYYMMDD-XX
-  claimant_email  TEXT NOT NULL,
-  claimant_name   TEXT,
-  department      TEXT,
-  claim_date      DATE,
-  items           JSONB DEFAULT '[]',     -- [{description, qty, unit_price}]
-  total_amount    NUMERIC(12,2),
-  currency        TEXT DEFAULT 'MYR',
-  purpose         TEXT,
-  notes           TEXT,
-  status          TEXT DEFAULT 'Pending', -- Pending | Approved | Rejected | Paid
-  approved_by     TEXT,
-  approver_note   TEXT,
-  approved_at     TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Staff Claims (with AI receipt scanning)
-CREATE TABLE IF NOT EXISTS staff_claims (
-  id              BIGSERIAL PRIMARY KEY,
-  claim_number    TEXT UNIQUE NOT NULL,   -- SPN-SC-YYYYMMDD-XX
-  claimant_email  TEXT NOT NULL,
-  claimant_name   TEXT,
-  department      TEXT,
-  items           JSONB DEFAULT '[]',     -- [{vendor, amount, project, remarks}]
-  total_amount    NUMERIC(12,2),
-  currency        TEXT DEFAULT 'MYR',
-  notes           TEXT,
-  status          TEXT DEFAULT 'Pending', -- Pending | Approved | Rejected | Paid
-  approved_by     TEXT,
-  approver_note   TEXT,
-  approved_at     TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Leave System
-CREATE TABLE IF NOT EXISTS logs (
-  id              BIGSERIAL PRIMARY KEY,
-  email           TEXT NOT NULL,
-  name            TEXT,
-  leave_type      TEXT NOT NULL,          -- Annual | Sick | Hospitalization | Maternity | Paternity | Compassionate | Unpaid
-  duration        TEXT DEFAULT 'full',    -- full | half_am | half_pm
-  start_date      DATE NOT NULL,
-  end_date        DATE NOT NULL,
-  days            NUMERIC(4,1) NOT NULL,
-  reason          TEXT,
-  year            INT,
-  status          TEXT DEFAULT 'Pending', -- Pending | Approved | Rejected | Cancelled
-  approved_by     TEXT,
-  approver_note   TEXT,
-  applied_at      TIMESTAMPTZ DEFAULT NOW(),
-  approved_at     TIMESTAMPTZ
-);
-
--- Settings / configuration (optional)
-CREATE TABLE IF NOT EXISTS settings (
-  key   TEXT PRIMARY KEY,
-  value TEXT
-);
-
--- Indexes for performance
-CREATE INDEX IF NOT EXISTS idx_po_logs_email   ON po_logs(requester_email);
-CREATE INDEX IF NOT EXISTS idx_po_logs_status  ON po_logs(status);
-CREATE INDEX IF NOT EXISTS idx_cc_email        ON cash_claims(claimant_email);
-CREATE INDEX IF NOT EXISTS idx_sc_email        ON staff_claims(claimant_email);
-CREATE INDEX IF NOT EXISTS idx_logs_email      ON logs(email);
-CREATE INDEX IF NOT EXISTS idx_logs_year       ON logs(year);
-CREATE INDEX IF NOT EXISTS idx_logs_status     ON logs(status);
-```
+> **The SQL that used to be inlined here was wrong.** It was inherited from the
+> CARBONEX portal and disagreed with this code in ways that would have failed at
+> runtime, not at setup time: `po_logs.requester_email` where the PO module
+> writes `req_email`, `staff_claims.claimant_email` where Staff Claim writes
+> `staff_email`, `vendor_*` columns where the code writes `supplier_*`, and
+> several columns the modules use that were missing entirely
+> (`submission_date`, `payable_name`, `bank_details`, `claimant_nric`,
+> `claimant_phone`, `project`, `project_ref`, `delivery_address`, `submitted_at`).
+> `supabase/schema.sql` is derived from the columns the modules actually read
+> and write. Use it, not any older copy.
 
 ### 3.4 Row Level Security (RLS)
 
@@ -570,15 +445,15 @@ each occurrence.
 
 | Placeholder | Files |
 |---|---|
-| `YOUR_SUPABASE_URL` | `index.html`, `po/`, `cashclaim/`, `staffclaim/`, `leave/`, `settings/` |
-| `YOUR_SUPABASE_ANON_KEY` | same six files |
-| `YOUR_SUPABASE_PROJECT_REF` | `index.html` (auth-token storage key), `.github/workflows/prevent-supabase-pause.yml` |
+| ~~`YOUR_SUPABASE_URL`~~ | done — `https://ugvehqkqsvolpdqwaggg.supabase.co` |
+| ~~`YOUR_SUPABASE_ANON_KEY`~~ | done |
+| ~~`YOUR_SUPABASE_PROJECT_REF`~~ | done — `ugvehqkqsvolpdqwaggg` |
 | *(none — Gemini key removed; see §5)* | — |
 | `YOUR_EMAILJS_SERVICE_ID` | `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
 | `YOUR_EMAILJS_TEMPLATE_ID` | same four files |
 | `YOUR_EMAILJS_PUBLIC_KEY` | same four files |
-| `YOUR_ADMIN_EMAIL` | `index.html`, `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
-| `YOUR_FINANCE_EMAIL` | `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
+| ~~`YOUR_ADMIN_EMAIL`~~ | done — `spinproengineering@gmail.com` |
+| ~~`YOUR_FINANCE_EMAIL`~~ | folded into the admin address; add a second approver in `ADMIN_EMAILS` and the `admins` table when there is one |
 | `YOUR_COMPANY_EMAIL`, `YOUR_COMPANY_ADDRESS`, `YOUR_COMPANY_TEL`, `YOUR_SSM_REG_NUMBER` | `CO` object in `po/`, `cashclaim/`, `staffclaim/` |
 | *(none — module email links derive the origin at runtime)* | `robots.txt` and `sitemap.xml` still carry a literal origin; update those two if you move hosts |
 

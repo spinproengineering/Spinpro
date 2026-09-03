@@ -24,27 +24,22 @@ The site lives under the `/Spinpro/` subpath, so every path in this repo is
 relative and the module manifests use `"start_url": "./"`. Keep it that way —
 absolute `/...` paths break under Pages.
 
-## Preview mode
+## Status
 
-Until Supabase is configured the portal **bypasses login** and opens straight to
-the dashboard, with a lime "Preview mode" banner on every page. It is gated on
-`PREVIEW_MODE = String(SUPABASE_URL || '').indexOf('http') !== 0`, so setting a
-real Supabase URL turns it off automatically and restores the session guard on
-every module. Nothing to remember to disable. See SETUP.md §2b.
+Supabase is wired up (project `ugvehqkqsvolpdqwaggg`) and login is enforced on
+every page — there is no bypass. Run
+**[`supabase/schema.sql`](supabase/schema.sql)** in the Supabase SQL Editor to
+create the tables and RLS policies, then sign up with an admin address.
 
-## Status — configuration required
-
-The portal is fully rebranded but **not yet wired to a backend**. Every
-credential ships as a literal placeholder, so nothing here talks to a live
-database until you fill them in:
+Still optional: EmailJS notifications (§6) and the company details used on
+generated PDFs (§4.2). Anything left unset:
 
 ```bash
 grep -rn "YOUR_" --include="*.html" --include="*.yml" . | grep -v vendor/
 ```
 
-Work through **[SETUP.md](SETUP.md)** — §3 (Supabase project + SQL schema),
-§4 (admin emails and company details), §5–6 (Gemini + EmailJS), §8 (deploy).
-§12 is the full placeholder checklist.
+Work through **[SETUP.md](SETUP.md)** — §3 (schema + RLS), §4 (admins and
+company details), §6 (EmailJS), §8 (deploy). §12 is the placeholder checklist.
 
 ## Brand
 

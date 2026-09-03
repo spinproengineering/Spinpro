@@ -1,6 +1,6 @@
 {
-  "name": "SpinPro Staff Claim",
-  "short_name": "SPN SC",
+  "name": "SpinPro PO",
+  "short_name": "SPN PO",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

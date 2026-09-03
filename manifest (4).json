@@ -1,6 +1,6 @@
 {
-  "name": "SpinPro Staff Claim",
-  "short_name": "SPN SC",
+  "name": "SpinPro Cash Claim",
+  "short_name": "SPN CC",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0d5339">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" href="logo.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="vendor/supabase-js.min.js"></script>
+    <title>SpinPro Portal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
+        #app-loader { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s, visibility 0.5s; }
+        #app-loader.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+        .input-box { border: 2px solid #f1f5f9; padding: 1rem; border-radius: 1.25rem; background: #f8fafc; font-weight: 700; width: 100%; outline: none; transition: all 0.2s; font-size: 16px; }
+        .input-box:focus { border-color: #0e6091; background: white; }
+        .nav-card { transition: all 0.2s cubic-bezier(0.4,0,0.2,1); border: 2px solid #f8fafc; background: #fff; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .nav-card:hover { border-color: #0e6091; transform: translateY(-3px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .nav-card:active { transform: scale(0.97); }
+        .hidden-force { display: none !important; }
+        #install-banner {
+            padding-bottom: env(safe-area-inset-bottom);
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.20, 0.64, 1);
+        }
+        #install-banner.banner-visible { transform: translateY(0); }
+    </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col items-center justify-center p-6 relative overflow-x-hidden">
+
+    <div id="app-loader">
+        <img src="icon-512.png" alt="SpinPro" class="w-28 animate-pulse mb-4" onerror="this.style.display='none'">
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading System...</p>
+    </div>
+
+    <div class="w-full max-w-md space-y-10 text-center">
+        <div class="flex flex-col items-center">
+            <img src="logo.png" alt="SpinPro Engineering" class="w-64 sm:w-72 md:w-80 h-auto object-contain mb-4">
+            <div class="h-1 w-16 rounded-full mb-2 bg-gradient-to-r from-[#0e6091] via-[#1f9a8f] to-[#8ab52a]"></div>
+            <p class="text-[11px] font-black uppercase tracking-[0.5em] text-slate-400">Operations Portal</p>
+        </div>
+
+        <div id="auth-view" class="hidden space-y-6">
+            <div class="space-y-2">
+                <h2 id="auth-title" class="text-xl font-black text-slate-800">Welcome</h2>
+                <p id="auth-subtitle" class="text-xs font-bold text-slate-400">Please login to access the system.</p>
+            </div>
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="Email Address" class="input-box" required>
+                <input type="password" id="password" placeholder="Password" class="input-box" required>
+                <div id="forgot-link-box" class="text-right">
+                    <button onclick="toggleResetMode()" class="text-[10px] font-bold text-slate-400 hover:text-[#0e6091] uppercase tracking-widest">Forgot Password?</button>
+                </div>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button onclick="handleAuth()" id="submit-btn" class="w-full bg-[#0d5339] text-white font-black p-5 rounded-[2rem] shadow-xl uppercase tracking-widest text-xs hover:bg-[#0e6091] transition-all">Login</button>
+                <button onclick="toggleAuthMode()" id="toggle-btn" class="w-full bg-white border-2 border-slate-200 text-slate-900 font-black p-5 rounded-[2rem] uppercase tracking-widest text-[10px] hover:border-[#0e6091] hover:text-[#0e6091] transition-all shadow-sm">Create New Account</button>
+            </div>
+            <p id="error-msg" class="text-red-500 text-xs font-bold hidden bg-red-50 p-3 rounded-xl"></p>
+        </div>
+
+        <div id="update-password-view" class="hidden space-y-6">
+            <div class="space-y-2">
+                <h2 class="text-xl font-black text-slate-800">Set New Password</h2>
+                <p class="text-xs font-bold text-slate-400">Secure your account with a new password.</p>
+            </div>
+            <input type="password" id="new-password" placeholder="Enter New Password" class="input-box" required>
+            <button onclick="handlePasswordUpdate()" class="w-full bg-[#0e6091] text-white font-black p-5 rounded-[2rem] shadow-xl uppercase tracking-widest text-xs hover:bg-[#0e6091] transition-all">Update Password</button>
+            <p id="update-msg" class="text-red-500 text-xs font-bold hidden bg-red-50 p-3 rounded-xl"></p>
+        </div>
+
+        <div id="dashboard-view" class="hidden space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <a href="po/index.html" id="card-po" class="nav-card relative p-5 rounded-[2rem] flex flex-col items-center gap-3 text-center">
+                    <div class="bg-[#0e6091] text-white p-3 rounded-xl"><i data-lucide="shopping-cart" class="w-5 h-5"></i></div>
+                    <div><h2 class="font-black uppercase italic text-slate-800 text-[10px] leading-tight">PO System</h2><p class="text-[8px] text-slate-400 font-bold mt-0.5">Purchase Orders</p></div>
+                </a>
+                <a href="cashclaim/index.html" id="card-cashclaim" class="nav-card relative p-5 rounded-[2rem] flex flex-col items-center gap-3 text-center">
+                    <div class="bg-[#17798d] text-white p-3 rounded-xl"><i data-lucide="wallet" class="w-5 h-5"></i></div>
+                    <div><h2 class="font-black uppercase italic text-slate-800 text-[10px] leading-tight">Cash Claim</h2><p class="text-[8px] text-slate-400 font-bold mt-0.5">Expense Claims</p></div>
+                </a>
+                <a href="staffclaim/index.html" id="card-staffclaim" class="nav-card relative p-5 rounded-[2rem] flex flex-col items-center gap-3 text-center">
+                    <div class="bg-[#1f9a8f] text-white p-3 rounded-xl"><i data-lucide="file-text" class="w-5 h-5"></i></div>
+                    <div><h2 class="font-black uppercase italic text-slate-800 text-[10px] leading-tight">Staff Claim</h2><p class="text-[8px] text-slate-400 font-bold mt-0.5">Reimbursements</p></div>
+                </a>
+                <a href="leave/index.html" id="card-leave" class="nav-card relative p-5 rounded-[2rem] flex flex-col items-center gap-3 text-center">
+                    <div class="bg-[#5aa84e] text-white p-3 rounded-xl"><i data-lucide="calendar" class="w-5 h-5"></i></div>
+                    <div><h2 class="font-black uppercase italic text-slate-800 text-[10px] leading-tight">Leave System</h2><p class="text-[8px] text-slate-400 font-bold mt-0.5">Leave Management</p></div>
+                </a>
+                <a href="settings/index.html" class="nav-card col-span-2 p-5 rounded-[2rem] flex flex-row items-center gap-4 text-left">
+                    <div class="bg-[#0d5339] text-white p-3 rounded-xl flex-shrink-0"><i data-lucide="settings" class="w-5 h-5"></i></div>
+                    <div><h2 class="font-black uppercase italic text-slate-800 text-[10px] leading-tight">Settings</h2><p class="text-[8px] text-slate-400 font-bold mt-0.5">Staff Directory · Admin Management</p></div>
+                </a>
+            </div>
+            <button onclick="handleLogout()" class="text-[10px] font-bold text-red-300 hover:text-red-500 uppercase tracking-widest flex items-center justify-center gap-2 mx-auto pt-2">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out
+            </button>
+        </div>
+
+        <!-- PWA Install Banner -->
+        <div id="install-banner" class="fixed bottom-0 left-0 right-0 z-40 bg-[#062b1e] text-white shadow-2xl">
+            <div class="flex items-center justify-between gap-3 px-5 py-4 max-w-md mx-auto">
+                <div class="flex items-center gap-3">
+                    <img src="icon-192.png" class="w-10 h-10 object-cover rounded-xl flex-shrink-0" alt="">
+                    <div class="text-left">
+                        <p class="text-xs font-black uppercase tracking-wider leading-tight">Install App</p>
+                        <p class="text-[10px] text-[#a3cf4a] font-bold leading-tight mt-0.5">Add SpinPro to your home screen</p>
+                    </div>
+                </div>
+                <div class="flex items-center flex-shrink-0">
+                    <button id="install-btn" onclick="triggerInstall()" class="bg-[#0e6091] hover:bg-[#1477ad] text-white font-black text-[10px] uppercase tracking-wider px-5 py-2.5 rounded-xl min-h-[44px] transition-colors">Install</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- iOS Install Guide Modal -->
+        <div id="ios-install-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-end">
+            <div class="bg-white rounded-t-3xl p-6 w-full shadow-2xl">
+                <div class="flex items-center gap-3 mb-4">
+                    <img src="logo.png" class="w-12 h-12 object-contain" alt="">
+                    <div>
+                        <h3 class="font-black text-slate-800 text-sm uppercase tracking-wider">Install SpinPro</h3>
+                        <p class="text-[10px] text-slate-500 font-bold">Add to your iPhone home screen</p>
+                    </div>
+                </div>
+                <ol class="text-xs text-slate-700 font-bold space-y-3 mb-5">
+                    <li class="flex items-start gap-3">
+                        <span class="bg-[#0e6091] text-white rounded-full w-6 h-6 flex items-center justify-center font-black text-[10px] flex-shrink-0 mt-0.5">1</span>
+                        <span>Tap the <strong>Share</strong> button <strong>(□↑)</strong> at the bottom of Safari</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="bg-[#0e6091] text-white rounded-full w-6 h-6 flex items-center justify-center font-black text-[10px] flex-shrink-0 mt-0.5">2</span>
+                        <span>Scroll down and tap <strong>Add to Home Screen</strong></span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="bg-[#0e6091] text-white rounded-full w-6 h-6 flex items-center justify-center font-black text-[10px] flex-shrink-0 mt-0.5">3</span>
+                        <span>Tap <strong>Add</strong> to confirm</span>
+                    </li>
+                </ol>
+                <button onclick="document.getElementById('ios-install-modal').classList.add('hidden')" class="w-full bg-[#062b1e] text-white font-black text-xs uppercase tracking-wider p-4 rounded-2xl min-h-[52px]">Got it</button>
+            </div>
+        </div>
+
+        <footer class="pt-6 pb-32 flex flex-col items-center gap-1 text-center">
+            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-400">SPINPRO ENGINEERING SDN. BHD.</p>
+            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-400">© 2026 ALL RIGHTS RESERVED.</p>
+        </footer>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION — Replace with your Supabase project credentials
+        // See SETUP.md for full setup instructions
+        // ============================================================
+        const SUPABASE_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
+        // ============================================================
+
+
+        let supabaseClient;
+        // If this tab has no active session, drop any stale auth token left in
+        // localStorage BEFORE the client initialises. A leftover token makes
+        // supabase-js fire a SIGNED_IN on load that used to deadlock the auth lock.
+        try { if (!sessionStorage.getItem('spn_tab_session')) localStorage.removeItem('sb-ugvehqkqsvolpdqwaggg-auth-token'); } catch {}
+        // supabase-js v2 serialises auth calls through an exclusive Web Lock
+        // (navigator.locks); a reentrant acquire deadlocks it and freezes
+        // signInWithPassword() on "Processing..." forever. We use one per-tab
+        // session, so a pass-through lock is safe and makes deadlocks impossible.
+        const passThroughLock = async (_n, _t, fn) => await fn();
+        try { supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: passThroughLock } }); }
+        catch (err) { console.error('Supabase Init Error:', err); }
+
+        // Admins can approve in every module and see pending-approval red dots on the dashboard tiles.
+        const ADMIN_EMAILS = ['spinproengineering@gmail.com'];
+
+        // Red-dot pending badges on dashboard tiles. Admins see ALL pending items
+        // (awaiting their approval); a normal user sees only their own pending submissions.
+        async function loadPendingDots() {
+            let email;
+            try {
+                const { data } = await supabaseClient.auth.getSession();
+                if (!data?.session?.user?.email) return;
+                email = data.session.user.email;
+            } catch { return; }
+            const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+            const modules = [
+                { id: 'card-po',         table: 'po_logs',      emailCol: 'req_email' },
+                { id: 'card-cashclaim',  table: 'cash_claims',  emailCol: 'claimant_email' },
+                { id: 'card-staffclaim', table: 'staff_claims', emailCol: 'staff_email' },
+                { id: 'card-leave',      table: 'logs',         emailCol: 'email' },
+            ];
+            await Promise.all(modules.map(async (mod) => {
+                try {
+                    let q = supabaseClient.from(mod.table).select('id', { count: 'exact', head: true }).eq('status', 'Pending');
+                    if (!isAdmin) q = q.eq(mod.emailCol, email);
+                    const { count } = await q;
+                    const card = document.getElementById(mod.id);
+                    if (!card) return;
+                    const existing = card.querySelector('.pending-dot');
+                    if (count > 0 && !existing) {
+                        const dot = document.createElement('span');
+                        dot.className = 'pending-dot absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full';
+                        card.appendChild(dot);
+                    } else if (!(count > 0) && existing) {
+                        existing.remove();
+                    }
+                } catch (e) { /* silent */ }
+            }));
+        }
+
+        let isLoginMode = true, isResetMode = false, inactivityTimeout;
+        const INACTIVITY_LIMIT = 10 * 60 * 1000;
+        window.currentAuthEmail = 'Unknown';
+
+        async function keepAlive() {
+            try { await supabaseClient.from('settings').select('key').limit(1); } catch(e) {}
+        }
+        keepAlive();
+        setInterval(keepAlive, 5 * 60 * 1000);
+
+        async function initPortal() {
+            const backupTimer = setTimeout(() => {
+                document.getElementById('app-loader').classList.add('fade-out');
+                if (document.getElementById('dashboard-view').classList.contains('hidden')) showAuth();
+            }, 4000);
+            try {
+                const navEntries = window.performance?.getEntriesByType('navigation');
+                if (navEntries?.length > 0 && navEntries[0].type === 'reload') await handleLogout();
+                const { data } = await supabaseClient.auth.getSession();
+                const session = data?.session;
+                const tabActive = sessionStorage.getItem('spn_tab_session');
+                if (window.location.hash?.includes('type=recovery')) { showUpdatePasswordView(); }
+                else if (session && tabActive) {
+                    window.currentAuthEmail = session.user.email;
+                    showDashboard(); startInactivityTimer();
+                } else {
+                    if (session) await supabaseClient.auth.signOut();
+                    showAuth();
+                }
+            } catch (err) { console.error(err); showAuth(); }
+            finally { clearTimeout(backupTimer); document.getElementById('app-loader').classList.add('fade-out'); }
+        }
+
+        if (supabaseClient) {
+            supabaseClient.auth.onAuthStateChange(async (event, session) => {
+                if (event === 'PASSWORD_RECOVERY') { showUpdatePasswordView(); return; }
+                if (event === 'SIGNED_IN' && sessionStorage.getItem('spn_tab_session')) {
+                    if (session?.user) window.currentAuthEmail = session.user.email;
+                    showDashboard(); startInactivityTimer();
+                } else if (event === 'SIGNED_OUT') {
+                    stopInactivityTimer(); sessionStorage.removeItem('spn_tab_session'); showAuth();
+                }
+            });
+        }
+
+        function startInactivityTimer() {
+            clearTimeout(inactivityTimeout);
+            ['click','keypress','mousemove','touchstart'].forEach(e => document.addEventListener(e, resetInactivityTimer));
+            inactivityTimeout = setTimeout(handleLogout, INACTIVITY_LIMIT);
+        }
+        function resetInactivityTimer() { clearTimeout(inactivityTimeout); inactivityTimeout = setTimeout(handleLogout, INACTIVITY_LIMIT); }
+        function stopInactivityTimer() { clearTimeout(inactivityTimeout); ['click','keypress','mousemove','touchstart'].forEach(e => document.removeEventListener(e, resetInactivityTimer)); }
+
+        function showDashboard() { hideAllViews(); document.getElementById('dashboard-view').classList.remove('hidden'); lucide.createIcons(); setTimeout(loadPendingDots, 200); setTimeout(loadPendingDots, 3000); }
+        function showAuth() { hideAllViews(); document.getElementById('auth-view').classList.remove('hidden'); if (isResetMode) toggleResetMode(); lucide.createIcons(); }
+        function showUpdatePasswordView() { hideAllViews(); document.getElementById('update-password-view').classList.remove('hidden'); }
+        function hideAllViews() { ['auth-view','dashboard-view','update-password-view'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('submit-btn');
+            const errorMsg = document.getElementById('error-msg');
+            if (!email) { errorMsg.innerText = 'Please enter your email.'; errorMsg.classList.remove('hidden'); return; }
+            if (!isResetMode && !password) { errorMsg.innerText = 'Please enter your password.'; errorMsg.classList.remove('hidden'); return; }
+            btn.innerHTML = '<span class="animate-pulse">Processing...</span>';
+            errorMsg.classList.add('hidden');
+            const baseUrl = window.location.origin + window.location.pathname;
+            if (isResetMode) {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: baseUrl });
+                if (error) { errorMsg.innerText = error.message; errorMsg.classList.remove('hidden'); btn.innerText = 'Send Reset Link'; }
+                else { alert('Reset link sent! Check your email.'); toggleResetMode(); }
+                return;
+            }
+            if (isLoginMode) {
+                sessionStorage.setItem('spn_tab_session', 'true');
+                try {
+                    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('Login timed out — please close other tabs and try again.')), 15000));
+                    const { data, error } = await Promise.race([supabaseClient.auth.signInWithPassword({ email, password }), timeout]);
+                    if (error) { sessionStorage.removeItem('spn_tab_session'); errorMsg.innerText = error.message; errorMsg.classList.remove('hidden'); btn.innerText = 'Login'; }
+                    else if (data?.session) { window.currentAuthEmail = data.session.user.email; showDashboard(); startInactivityTimer(); }
+                } catch (e) {
+                    sessionStorage.removeItem('spn_tab_session'); errorMsg.innerText = e.message || 'Login failed. Please try again.'; errorMsg.classList.remove('hidden'); btn.innerText = 'Login';
+                }
+            } else {
+                const { error } = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: baseUrl } });
+                if (error) { errorMsg.innerText = error.message; errorMsg.classList.remove('hidden'); btn.innerText = 'Sign Up'; }
+                else { alert('Account created! Check your email to confirm.'); toggleAuthMode(); btn.innerText = 'Login'; }
+            }
+        }
+
+        function toggleResetMode() { isResetMode = !isResetMode; isLoginMode = true; updateAuthUI(); }
+        function toggleAuthMode() { if (isResetMode) { toggleResetMode(); return; } isLoginMode = !isLoginMode; updateAuthUI(); }
+        function updateAuthUI() {
+            const isR = isResetMode, isL = isLoginMode;
+            document.getElementById('error-msg').classList.add('hidden');
+            document.getElementById('auth-title').innerText = isR ? 'Reset Password' : isL ? 'Welcome' : 'Register';
+            document.getElementById('auth-subtitle').innerText = isR ? 'Enter your email to receive a reset link.' : isL ? 'Please login to access the system.' : 'Create your account.';
+            document.getElementById('submit-btn').innerText = isR ? 'Send Reset Link' : isL ? 'Login' : 'Sign Up';
+            document.getElementById('toggle-btn').innerText = isR ? 'Back to Login' : isL ? 'Create New Account' : 'Back to Login';
+            document.getElementById('password').classList.toggle('hidden-force', isR);
+            document.getElementById('forgot-link-box').classList.toggle('hidden-force', isR || !isL);
+        }
+
+        async function handlePasswordUpdate() {
+            const newPass = document.getElementById('new-password').value;
+            if (!newPass) return alert('Please enter a password.');
+            const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+            if (!error) { alert('Password updated!'); sessionStorage.setItem('spn_tab_session', 'true'); window.location.href = window.location.pathname; }
+            else { alert(error.message); }
+        }
+
+        async function handleLogout() {
+            stopInactivityTimer();
+            sessionStorage.removeItem('spn_tab_session');
+            localStorage.clear();
+            if (supabaseClient) await supabaseClient.auth.signOut();
+            window.location.href = window.location.pathname;
+        }
+
+        document.getElementById('password').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAuth(); });
+        lucide.createIcons();
+        window.onload = initPortal;
+
+        // PWA Install
+        let deferredInstallPrompt = null;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        let promptFired = false;
+
+        function showInstallBanner() {
+            if (isStandalone) return;
+            if (!localStorage.getItem('spn_install_dismissed')) {
+                document.getElementById('install-banner').classList.add('banner-visible');
+            }
+        }
+
+        function markInstalled() {
+            const btn = document.getElementById('install-btn');
+            if (!btn) return;
+            btn.textContent = 'INSTALLED';
+            btn.disabled = true;
+            btn.classList.remove('bg-[#0e6091]', 'hover:bg-[#1477ad]');
+            btn.classList.add('bg-slate-500', 'cursor-default');
+        }
+
+        // Capture the native install prompt when available (for the Install button)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            promptFired = true;
+            showInstallBanner();
+        });
+        // Always show the banner — even if the app is already installed
+        setTimeout(showInstallBanner, 1500);
+
+        // Update button when app gets installed in this session
+        window.addEventListener('appinstalled', markInstalled);
+
+        // Decide whether to show INSTALLED.
+        async function refreshInstallState() {
+            // Running inside the installed PWA window.
+            if (isStandalone) { markInstalled(); return; }
+            // iOS can't report install state — leave the Install button as-is.
+            if (isIOS) return;
+            // Chrome exposes related installed apps where supported.
+            if (navigator.getInstalledRelatedApps) {
+                try {
+                    const apps = await navigator.getInstalledRelatedApps();
+                    if (apps && apps.length) { markInstalled(); return; }
+                } catch (e) {}
+            }
+            // Do NOT infer "installed" from beforeinstallprompt not having fired.
+            // That event is also suppressed when the app isn't installable yet,
+            // was recently dismissed, or on browsers that don't support it — so the
+            // old guess showed INSTALLED on machines where it was never installed.
+            // We only mark INSTALLED on positive evidence: standalone display mode
+            // (isStandalone, above), a detected related app, or the 'appinstalled'
+            // event. Otherwise leave the button as a working "Install".
+        }
+        setTimeout(refreshInstallState, 2500);
+
+        function hideBanner() {
+            document.getElementById('install-banner').classList.remove('banner-visible');
+        }
+
+        function triggerInstall() {
+            if (isIOS) {
+                hideBanner();
+                document.getElementById('ios-install-modal').classList.remove('hidden');
+                return;
+            }
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                deferredInstallPrompt.userChoice.then(() => {
+                    deferredInstallPrompt = null;
+                    hideBanner();
+                });
+            }
+        }
+
+        function dismissInstall() {
+            hideBanner();
+            localStorage.setItem('spn_install_dismissed', '1');
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
-  "name": "SpinPro Staff Claim",
-  "short_name": "SPN SC",
+  "name": "SpinPro Leave System",
+  "short_name": "SPN Leave",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
