@@ -1,0 +1,30 @@
+name = "spinpro"
+compatibility_date = "2025-01-01"
+
+# Serve the repository's static files (index.html, po/, cashclaim/,
+# staffclaim/, leave/, settings/, assets) directly.
+[assets]
+directory = "."
+
+# ---------------------------------------------------------------------------
+# Custom domains — DISABLED until SpinPro owns a zone in Cloudflare.
+#
+# Uncomment the block below (and change the hostnames to the SpinPro domain)
+# once the DNS zone is added to your Cloudflare account. Until then the portal
+# is reachable on the generated workers.dev URL.
+#
+# On every deploy Cloudflare reconciles the Worker's custom domains to EXACTLY
+# match this list and provisions a TLS certificate for each (Workers custom
+# domains issue per-hostname Advanced Certificates, so a two-level www.portal
+# host gets HTTPS too). IMPORTANT: any custom domain added only in the
+# dashboard and NOT listed here is REMOVED on the next deploy — so every
+# hostname the portal should answer on must live in this file.
+# ---------------------------------------------------------------------------
+
+# [[routes]]
+# pattern = "portal.spinproengineering.com"
+# custom_domain = true
+
+# [[routes]]
+# pattern = "www.portal.spinproengineering.com"
+# custom_domain = true

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" href="../logo.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../vendor/supabase-js.min.js"></script>
+    <title>SpinPro | Settings</title>
+
+    <script>
+        document.documentElement.style.display = 'none';
+        const GUARD_URL = 'YOUR_SUPABASE_URL';
+        const GUARD_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const guardClient = supabase.createClient(GUARD_URL, GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        async function checkSession() {
+            const { data: { session } } = await guardClient.auth.getSession();
+            if (!session) window.location.href = '../index.html';
+            else document.documentElement.style.display = '';
+        }
+        checkSession();
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
+        .input-box { border: 2px solid #f1f5f9; padding: 1rem; border-radius: 1.25rem; background: #f8fafc; font-weight: 700; width: 100%; outline: none; transition: all 0.2s; font-size: 16px; }
+        .input-box:focus { border-color: #0e6091; background: white; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24">
+
+    <nav class="bg-white p-5 sticky top-0 z-50 shadow-sm border-b border-slate-100">
+        <div class="max-w-2xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="../index.html" class="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-all">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div>
+                    <h1 class="font-black text-slate-800 text-sm uppercase tracking-tight leading-none">SpinPro <span class="text-[#0e6091]">Settings</span></h1>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Staff Management</p>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-xl mx-auto p-4 mt-6 space-y-8">
+
+        <!-- Add Staff (admin only) -->
+        <div id="add-staff-section" class="hidden space-y-4">
+            <h2 class="font-black text-slate-400 uppercase text-[10px] tracking-widest italic ml-2">Add Staff</h2>
+            <section class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+                <form id="staff-form" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Full Name</label>
+                        <input type="text" id="staff-name" class="input-box" placeholder="e.g. Hiu Fu Shun" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Email Address</label>
+                        <input type="email" id="staff-email" class="input-box" placeholder="staff@spinproengineering.com" required>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black uppercase text-slate-500 ml-2">Join Date (for leave calculations)</label>
+                        <input type="date" id="staff-join" class="input-box" required>
+                    </div>
+                    <button type="submit" id="add-btn" class="w-full bg-[#0d5339] hover:bg-[#0e6091] text-white p-4 rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest shadow-lg transition-colors flex items-center justify-center gap-2 min-h-[52px]">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i> Add to Database
+                    </button>
+                </form>
+            </section>
+        </div>
+
+        <!-- Staff List -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between ml-2 mr-2">
+                <h2 class="font-black text-slate-400 uppercase text-[10px] tracking-widest italic">Staff Directory</h2>
+                <span id="staff-count" class="text-[9px] font-black text-slate-300 uppercase tracking-widest"></span>
+            </div>
+            <div id="staff-list" class="space-y-2">
+                <div class="p-8 text-center text-slate-400 italic text-xs font-bold border border-dashed border-slate-200 rounded-2xl bg-white animate-pulse">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 hidden">
+            <div id="toast-inner" class="px-5 py-3 rounded-2xl shadow-xl text-xs font-black uppercase tracking-widest text-white bg-[#0d5339]"></div>
+        </div>
+
+        <footer class="text-center py-4 mt-6">
+            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-300">SPINPRO ENGINEERING SDN. BHD.</p>
+            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-200 mt-1">© 2026 ALL RIGHTS RESERVED.</p>
+        </footer>
+    </main>
+
+    <!-- Delete Confirm Modal -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-red-100 p-3 rounded-xl"><i data-lucide="alert-triangle" class="w-5 h-5 text-red-500"></i></div>
+                <div>
+                    <h3 class="font-black text-slate-800 text-sm uppercase">Delete Staff?</h3>
+                    <p id="delete-modal-name" class="text-xs text-slate-500 font-bold mt-0.5"></p>
+                </div>
+            </div>
+            <p class="text-xs text-slate-600 font-bold">This will remove them from the staff directory. Previous leave applications will lose the name link.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 bg-slate-100 text-slate-700 font-black text-[10px] uppercase tracking-wider p-3.5 rounded-xl min-h-[44px]">Cancel</button>
+                <button onclick="confirmDelete()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase tracking-wider p-3.5 rounded-xl min-h-[44px] transition-colors">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+
+        const ADMIN_EMAILS = ['YOUR_ADMIN_EMAIL', 'YOUR_FINANCE_EMAIL'];
+        let staffDatabase = [], isAuthorized = false, pendingDeleteId = null;
+
+        async function init() {
+            lucide.createIcons();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && ADMIN_EMAILS.includes(session.user.email)) {
+                isAuthorized = true;
+                document.getElementById('add-staff-section').classList.remove('hidden');
+            }
+            await fetchStaff();
+        }
+
+        async function fetchStaff() {
+            try {
+                const { data, error } = await supabaseClient.from('staff').select('*').order('name', { ascending: true });
+                if (error) throw error;
+                staffDatabase = data || [];
+                renderStaffList();
+            } catch (err) {
+                showToast('Failed to load staff data', true);
+            }
+        }
+
+        function renderStaffList() {
+            const el = document.getElementById('staff-list');
+            document.getElementById('staff-count').textContent = staffDatabase.length + ' members';
+
+            if (staffDatabase.length === 0) {
+                el.innerHTML = `<div class="p-8 text-center text-slate-400 italic text-xs font-bold border border-dashed border-slate-200 rounded-2xl bg-white">No staff registered yet.</div>`;
+                return;
+            }
+
+            el.innerHTML = staffDatabase.map(s => {
+                const joinDate = s.join_date ? new Date(s.join_date).toLocaleDateString('en-GB') : '—';
+                return `
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-[#e9f2f7] text-[#0e6091] p-2.5 rounded-xl">
+                            <i data-lucide="user" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-black text-slate-800 uppercase text-xs">${s.name}</h3>
+                            <p class="text-[9px] font-bold text-slate-500 break-all">${s.email}</p>
+                            <p class="text-[8px] font-bold text-slate-400 uppercase italic mt-0.5 bg-slate-100 inline-block px-2 py-0.5 rounded">Joined: ${joinDate}</p>
+                        </div>
+                    </div>
+                    ${isAuthorized ? `<button onclick="openDeleteModal(${s.id}, '${s.name.replace(/'/g,'\\\'')}')" class="bg-slate-100 text-slate-400 p-3 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
+                </div>`;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        document.getElementById('staff-form').onsubmit = async (e) => {
+            e.preventDefault();
+            if (!isAuthorized) { showToast('Admin access required', true); return; }
+            const btn = document.getElementById('add-btn');
+            btn.innerHTML = '<span class="animate-pulse">Saving...</span>';
+            btn.disabled = true;
+
+            const payload = {
+                id: Date.now(),
+                name: document.getElementById('staff-name').value.trim(),
+                email: document.getElementById('staff-email').value.trim().toLowerCase(),
+                join_date: document.getElementById('staff-join').value
+            };
+
+            try {
+                const { error } = await supabaseClient.from('staff').insert(payload);
+                if (error) throw error;
+                e.target.reset();
+                await fetchStaff();
+                showToast('Staff profile added successfully');
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            } finally {
+                btn.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4"></i> Add to Database';
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        };
+
+        function openDeleteModal(id, name) {
+            pendingDeleteId = id;
+            document.getElementById('delete-modal-name').textContent = name;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            pendingDeleteId = null;
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+
+        async function confirmDelete() {
+            if (!isAuthorized || !pendingDeleteId) return;
+            try {
+                const { error } = await supabaseClient.from('staff').delete().eq('id', pendingDeleteId);
+                if (error) throw error;
+                closeDeleteModal();
+                await fetchStaff();
+                showToast('Staff profile removed');
+            } catch (err) {
+                showToast('Error: ' + err.message, true);
+            }
+        }
+
+        let toastTimeout;
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const inner = document.getElementById('toast-inner');
+            inner.textContent = msg;
+            inner.className = `px-5 py-3 rounded-2xl shadow-xl text-xs font-black uppercase tracking-widest text-white ${isError ? 'bg-red-500' : 'bg-[#0e6091]'}`;
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# SPINPRO ENGINEERING SDN. BHD. — internal operations portal
+# Public, legitimate company web application. Crawling is allowed.
+User-agent: *
+Allow: /
+
+Sitemap: https://portal.spinproengineering.com/sitemap.xml

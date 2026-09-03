@@ -1,0 +1,13 @@
+# Files in the repo root that should NOT be served as public static assets.
+# Keeps the deployed site clean & fast, and prevents exposing source/history.
+.git
+.github
+.claude
+.wrangler
+node_modules
+.gitignore
+.assetsignore
+wrangler.toml
+README.md
+SETUP.md
+*.log

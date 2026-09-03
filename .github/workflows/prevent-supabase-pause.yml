@@ -1,0 +1,44 @@
+name: Prevent Supabase Pause
+
+on:
+  schedule:
+    # Runs every hour
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allows manual trigger for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          PROJECT_ID: YOUR_SUPABASE_PROJECT_REF
+        run: |
+          # Until the SpinPro Supabase project exists, PROJECT_ID is still the
+          # placeholder — skip instead of failing the run every hour.
+          if [ "$PROJECT_ID" = "YOUR_SUPABASE_PROJECT_REF" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "Supabase project not configured yet (PROJECT_ID=$PROJECT_ID). Skipping."
+            exit 0
+          fi
+
+          echo "Pinging Supabase Project: $PROJECT_ID..."
+          
+          RESPONSE_FILE=$(mktemp)
+          
+          HTTP_STATUS=$(curl -s -w "%{http_code}" \
+            -o "$RESPONSE_FILE" \
+            -X GET "https://$PROJECT_ID.supabase.co/rest/v1/settings?select=key&limit=1" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY")
+
+          RESPONSE_BODY=$(cat "$RESPONSE_FILE")
+
+          # Accepting 200-499 as successful activity
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 500 ]; then
+            echo "Success! Activity logged. Status: $HTTP_STATUS"
+          else
+            echo "FAILED! Status: $HTTP_STATUS"
+            echo "Details: $RESPONSE_BODY"
+            exit 1
+          fi
