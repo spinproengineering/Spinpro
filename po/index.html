@@ -263,9 +263,9 @@
         const CO = {
             name: 'SPINPRO ENGINEERING SDN. BHD.',
             reg:  'YOUR_SSM_REG_NUMBER',
-            email:'YOUR_COMPANY_EMAIL',
-            address: 'YOUR_COMPANY_ADDRESS',
-            tel:  'YOUR_COMPANY_TEL'
+            email:'spinproengineering@gmail.com',
+            address: 'Unit 906-3-04, Soon Hup Tower (2nd Floor), Jalan Maju, 98000 Miri, Sarawak, Malaysia.',
+            tel:  '+6084-309 048 (Miri Office)'
         };
 
         // ============================================================
@@ -793,7 +793,7 @@
             if (!headerRendered) {
                 doc.setFont('helvetica', 'bold').setFontSize(15).text(CO.name, 105, 20, { align: 'center' });
                 doc.setFontSize(8).setFont('helvetica', 'normal');
-                if (CO.reg) doc.text('Reg No: ' + CO.reg, 105, 26, { align: 'center' });
+                if (CO.reg && CO.reg !== 'YOUR_SSM_REG_NUMBER') doc.text('Reg No: ' + CO.reg, 105, 26, { align: 'center' });
                 const addrLines = doc.splitTextToSize(CO.address, 180);
                 doc.text(addrLines, 105, 30, { align: 'center' });
                 currentY = 30 + (addrLines.length * 4);
