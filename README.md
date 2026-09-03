@@ -24,6 +24,14 @@ The site lives under the `/Spinpro/` subpath, so every path in this repo is
 relative and the module manifests use `"start_url": "./"`. Keep it that way —
 absolute `/...` paths break under Pages.
 
+## Preview mode
+
+Until Supabase is configured the portal **bypasses login** and opens straight to
+the dashboard, with a lime "Preview mode" banner on every page. It is gated on
+`PREVIEW_MODE = String(SUPABASE_URL || '').indexOf('http') !== 0`, so setting a
+real Supabase URL turns it off automatically and restores the session guard on
+every module. Nothing to remember to disable. See SETUP.md §2b.
+
 ## Status — configuration required
 
 The portal is fully rebranded but **not yet wired to a backend**. Every

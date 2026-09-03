@@ -21,8 +21,26 @@
         document.documentElement.style.display='none';
         const GUARD_URL='YOUR_SUPABASE_URL';
         const GUARD_KEY='YOUR_SUPABASE_ANON_KEY';
-        const guardClient=supabase.createClient(GUARD_URL,GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
-        async function checkSession(){const{data:{session}}=await guardClient.auth.getSession();if(!session)window.location.href='../index.html';else document.documentElement.style.display='';}
+
+        // PREVIEW MODE — see index.html. Active only while Supabase is
+        // unconfigured; a real SUPABASE_URL restores the session guard.
+        const PREVIEW_MODE = String(GUARD_URL || '').indexOf('http') !== 0;
+        function showPreviewBanner() {
+            if (!PREVIEW_MODE) return;
+            const add = () => {
+                if (document.getElementById('preview-banner')) return;
+                const el = document.createElement('div');
+                el.id = 'preview-banner';
+                el.className = 'fixed top-0 left-0 right-0 z-50 bg-[#8ab52a] text-[#0d2b12] text-center px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-lg';
+                el.textContent = 'Preview mode — login bypassed, no database connected';
+                document.body.appendChild(el);
+                document.body.style.paddingTop = '2.25rem';
+            };
+            if (document.body) add();
+            else document.addEventListener('DOMContentLoaded', add);
+        }
+        const guardClient=PREVIEW_MODE?null:supabase.createClient(GUARD_URL,GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        async function checkSession(){if(PREVIEW_MODE){document.documentElement.style.display='';showPreviewBanner();return;}const{data:{session}}=await guardClient.auth.getSession();if(!session)window.location.href='../index.html';else document.documentElement.style.display='';}
         checkSession();
     </script>
     <style>
@@ -174,7 +192,7 @@
             tel:  'YOUR_COMPANY_TEL'
         };
 
-        const supabaseClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        const supabaseClient=PREVIEW_MODE?null:supabase.createClient(SUPABASE_URL,SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
         const formatRM=n=>parseFloat(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
         const mkRow=(l,v)=>`<tr><td style="padding:12px 0;border-bottom:1px solid #eef2f6;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${l}</td><td style="padding:12px 0;border-bottom:1px solid #eef2f6;color:#0f172a;font-size:14px;font-weight:800;text-align:right">${v}</td></tr>`;
 

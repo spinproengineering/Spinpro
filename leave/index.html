@@ -277,7 +277,21 @@
 const SUPABASE_URL = 'YOUR_SUPABASE_URL';
 const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+
+// PREVIEW MODE — see index.html. Active only while Supabase is unconfigured;
+// a real SUPABASE_URL restores the session guard in init().
+const PREVIEW_MODE = String(SUPABASE_URL || '').indexOf('http') !== 0;
+function showPreviewBanner() {
+  if (!PREVIEW_MODE || document.getElementById('preview-banner')) return;
+  const el = document.createElement('div');
+  el.id = 'preview-banner';
+  el.className = 'fixed top-0 left-0 right-0 z-50 bg-[#8ab52a] text-[#0d2b12] text-center px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-lg';
+  el.textContent = 'Preview mode — login bypassed, no database connected';
+  document.body.appendChild(el);
+  document.body.style.paddingTop = '2.25rem';
+}
+// createClient throws on a placeholder URL, which would leave the page hidden.
+const sb = PREVIEW_MODE ? null : createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
 
 const ADMIN_EMAILS = ['YOUR_ADMIN_EMAIL', 'YOUR_FINANCE_EMAIL'];
 
@@ -318,6 +332,13 @@ let currentYear = new Date().getFullYear();
 
 // ---- Auth ----
 async function init() {
+  if (PREVIEW_MODE) {
+    document.documentElement.style.display = '';
+    showPreviewBanner();
+    const ue = document.getElementById('userEmail');
+    if (ue) ue.textContent = 'preview@spinpro';
+    return;
+  }
   const { data: { session } } = await sb.auth.getSession();
   if (!session || sessionStorage.getItem('spn_tab_session') !== 'true') {
     window.location.href = '../index.html';

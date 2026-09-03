@@ -148,9 +148,9 @@
             </div>
         </div>
 
-        <footer class="pt-6 pb-10 flex flex-col items-center gap-1 text-center">
-            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-300">SPINPRO ENGINEERING SDN. BHD.</p>
-            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-200">© 2026 ALL RIGHTS RESERVED.</p>
+        <footer class="pt-6 pb-32 flex flex-col items-center gap-1 text-center">
+            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-400">SPINPRO ENGINEERING SDN. BHD.</p>
+            <p class="text-[9px] font-black uppercase tracking-[0.5em] text-slate-400">© 2026 ALL RIGHTS RESERVED.</p>
         </footer>
     </div>
 
@@ -162,6 +162,25 @@
         const SUPABASE_URL = 'YOUR_SUPABASE_URL';
         const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
         // ============================================================
+
+        // ============================================================
+        // PREVIEW MODE — login bypass, active ONLY while Supabase is
+        // unconfigured. The moment SUPABASE_URL becomes a real URL this
+        // evaluates false and normal authentication is enforced again, so the
+        // bypass cannot survive into a configured deployment. Nothing here
+        // touches the login code path itself.
+        // ============================================================
+        const PREVIEW_MODE = String(SUPABASE_URL || '').indexOf('http') !== 0;
+
+        function showPreviewBanner() {
+            if (!PREVIEW_MODE || document.getElementById('preview-banner')) return;
+            const el = document.createElement('div');
+            el.id = 'preview-banner';
+            el.className = 'fixed top-0 left-0 right-0 z-50 bg-[#8ab52a] text-[#0d2b12] text-center px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-lg';
+            el.textContent = 'Preview mode — login bypassed, no database connected';
+            document.body.appendChild(el);
+            document.body.style.paddingTop = '2.25rem';
+        }
 
         let supabaseClient;
         // If this tab has no active session, drop any stale auth token left in
@@ -229,6 +248,13 @@
                 document.getElementById('app-loader').classList.add('fade-out');
                 if (document.getElementById('dashboard-view').classList.contains('hidden')) showAuth();
             }, 4000);
+            if (PREVIEW_MODE) {
+                clearTimeout(backupTimer);
+                document.getElementById('app-loader').classList.add('fade-out');
+                showPreviewBanner();
+                showDashboard();
+                return;
+            }
             try {
                 const navEntries = window.performance?.getEntriesByType('navigation');
                 if (navEntries?.length > 0 && navEntries[0].type === 'reload') await handleLogout();
@@ -327,6 +353,7 @@
         }
 
         async function handleLogout() {
+            if (PREVIEW_MODE) { hideAllViews(); showAuth(); return; }
             stopInactivityTimer();
             sessionStorage.removeItem('spn_tab_session');
             localStorage.clear();

@@ -52,6 +52,34 @@ All seven are sampled from the SpinPro swirl mark.
 
 ---
 
+## 2b. Preview mode (login bypass)
+
+While Supabase is unconfigured the portal **bypasses login** so you can click
+through the UI. A lime banner reads *"Preview mode — login bypassed, no database
+connected"* on every page.
+
+It is controlled by one line, repeated in each page:
+
+```javascript
+const PREVIEW_MODE = String(SUPABASE_URL || '').indexOf('http') !== 0;
+```
+
+So it is on only while `SUPABASE_URL` is the `YOUR_SUPABASE_URL` placeholder.
+**The moment you paste a real Supabase URL in §3.2, `PREVIEW_MODE` becomes
+false, the banner disappears, and every module enforces the session guard
+again** — it redirects to the login page when there is no session. There is
+nothing to remember to turn off, and no way for the bypass to reach a
+configured deployment.
+
+What preview mode does *not* do: there is no database behind it, so lists are
+empty and nothing saves. It is for looking at layout and navigation.
+
+> If you ever want the portal reachable **only** by staff, note that a static
+> site cannot enforce that — the guard is client-side. Real access control is
+> Supabase Auth plus the RLS policies in §3.4.
+
+---
+
 ## 3. Supabase Setup
 
 ### 3.1 Create a new Supabase project
