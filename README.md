@@ -15,6 +15,15 @@ served by a Cloudflare Worker. Installable as a PWA on iOS and Android.
 | Leave | `/leave/` | `logs` | integer id |
 | Settings (admin) | `/settings/` | `staff` | — |
 
+## Live site
+
+**https://hiufsitake.github.io/Spinpro/** — served by GitHub Pages from `main`,
+redeployed on every push.
+
+The site lives under the `/Spinpro/` subpath, so every path in this repo is
+relative and the module manifests use `"start_url": "./"`. Keep it that way —
+absolute `/...` paths break under Pages.
+
 ## Status — configuration required
 
 The portal is fully rebranded but **not yet wired to a backend**. Every
@@ -60,13 +69,25 @@ failure would leave `supabase` undefined and break login. Keep them local.
 
 ## Deploy
 
-Cloudflare Workers serves the repo root as static assets (`wrangler.toml`).
-Custom domains are commented out until SpinPro's zone is on Cloudflare — until
-then the Worker answers on its generated `*.workers.dev` URL.
+GitHub Pages, from `main` at the repo root — Settings → Pages → *Deploy from a
+branch*. Push to `main` and it redeploys. `.nojekyll` keeps Pages from running
+the tree through Jekyll.
 
-```bash
-wrangler deploy    # from repo root
-```
+`wrangler.toml` is kept for the Cloudflare Workers route (SETUP.md §8 Option B)
+if you later move to a private repo and a custom domain.
 
-See [`.github/SECRETS.md`](.github/SECRETS.md) for where every key lives and how
-to rotate it. Never commit a Cloudflare token or the Supabase `service_role` key.
+## Security — this repo is public
+
+Free Pages hosting requires it, so everything committed here is world-readable
+and permanent in git history.
+
+There is **no Gemini API key in this repo** and AI receipt scanning is disabled
+(`GEMINI_API_KEY = ''` in `staffclaim/index.html`); the scanner panel hides
+itself and claims are entered by hand. Don't paste a key there — it would be
+scraped within minutes. To re-enable scanning, proxy the call through a Supabase
+Edge Function so the key stays server-side: [SETUP.md §5](SETUP.md).
+
+The Supabase **anon** key is safe to publish (it ships to every browser); your
+data is protected by Row Level Security instead, which makes §3.4 load-bearing.
+Never commit the **service_role** key or a Cloudflare token — see
+[`.github/SECRETS.md`](.github/SECRETS.md).

@@ -578,7 +578,7 @@
                         title,
                         html_body,
                         remark_text,
-                        cta_url:   cta.url   || 'https://portal.spinproengineering.com/po/',
+                        cta_url:   cta.url   || 'https://hiufsitake.github.io/Spinpro/po/',
                         cta_label: cta.label || 'Open SpinPro Portal'
                     });
                 } catch (e) {
@@ -623,7 +623,7 @@
                     { ...payload, req_email: reqEmail, req_name: reqName },
                     'A purchase order needs your review. Click below to open it in the portal.',
                     APPROVER_EMAILS,
-                    { url: 'https://portal.spinproengineering.com/po/#review', label: 'Review & Approve' }
+                    { url: 'https://hiufsitake.github.io/Spinpro/po/#review', label: 'Review & Approve' }
                 );
                 
                 alert(editingId ? 'PO Updated & Resubmitted.' : 'PO Submitted Successfully.');
@@ -700,7 +700,7 @@
                     { ...po, approved_by: currentApproverInitials },
                     (isApproved ? 'Purchase Order approved. Proceed with supplier.' : 'Purchase Order rejected. Please modify and resubmit.') + createdLine,
                     [po.req_email || PO_APPROVER_EMAIL],
-                    { url: 'https://portal.spinproengineering.com/po/' + (isApproved ? '#history' : '#create'), label: isApproved ? 'View in SpinPro Portal' : 'Open & Resubmit' }
+                    { url: 'https://hiufsitake.github.io/Spinpro/po/' + (isApproved ? '#history' : '#create'), label: isApproved ? 'View in SpinPro Portal' : 'Open & Resubmit' }
                 );
             }
             fetchRecords();

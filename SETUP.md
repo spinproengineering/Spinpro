@@ -222,7 +222,7 @@ CREATE POLICY "auth_all" ON settings     FOR ALL TO authenticated USING (true) W
 
 In Supabase → Authentication → Settings:
 - Enable **Email** provider
-- Set **Site URL** to your deployed domain (`https://portal.spinproengineering.com`)
+- Set **Site URL** to your deployed domain (`https://hiufsitake.github.io/Spinpro`)
 - Add redirect URLs if using magic links
 
 ---
@@ -264,16 +264,46 @@ const CO = {
 
 ---
 
-## 5. Gemini API (AI Receipt Scanning)
+## 5. AI Receipt Scanning (Gemini) — disabled
 
-In `staffclaim/index.html`, replace:
+The Smart Scanner in Staff Claim is **off**, and there is no Gemini key in this
+repo. `staffclaim/index.html` has:
 
 ```javascript
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
+const GEMINI_API_KEY = '';
 ```
 
-Get your key at [aistudio.google.com](https://aistudio.google.com) → Get API Key.
-The free tier supports generous usage for receipt scanning.
+While that is empty the scanner panel hides itself and the handler refuses to
+run, so Staff Claim works normally with items entered by hand. Nothing else in
+the portal touches Gemini.
+
+### Do not just paste a key here
+
+This repository is **public** (§11). A key in this file is world-readable and
+will be scraped and billed against, usually within minutes. GitHub's secret
+scanning will not save you either — that is why the original two-variable
+`K1 + K2` split was removed rather than kept with a placeholder.
+
+### To turn scanning back on, safely
+
+**Recommended — proxy it.** Put the key in a Supabase Edge Function and call
+that from the browser instead of `generativelanguage.googleapis.com`:
+
+```bash
+supabase secrets set GEMINI_API_KEY=your-real-key
+supabase functions deploy scan-receipt
+```
+
+Then point the two `fetch` calls in `handleAIProcessing()` at your function's
+URL, passing the user's Supabase JWT. The key never reaches the browser, and
+only signed-in staff can spend your quota.
+
+**Weaker fallback — restrict the key.** If you do put it client-side, first go to
+Google Cloud Console → Credentials and restrict the key to the Generative
+Language API with an HTTP-referrer restriction for `https://hiufsitake.github.io/*`.
+That limits, but does not prevent, abuse. Set a billing budget and alert either
+way. A client-side key is visible to anyone who opens DevTools regardless of
+whether the repo is public.
 
 ---
 
@@ -315,7 +345,32 @@ Or build an admin UI entry form as a future enhancement.
 
 ## 8. Deployment
 
-### Option A — Cloudflare Workers (recommended)
+### Option A — GitHub Pages (current setup)
+
+This is how the portal is published today. The site is served straight from the
+`main` branch of the public `hiufsitake/Spinpro` repo:
+
+1. Repo **Settings → Pages**
+2. **Source:** *Deploy from a branch*
+3. **Branch:** `main`, folder `/ (root)` → **Save**
+
+Live at **https://hiufsitake.github.io/Spinpro/**, and every push to `main`
+redeploys automatically (first build takes a minute or two).
+
+Notes specific to Pages hosting:
+
+- The site lives under the `/Spinpro/` **subpath**, not a domain root. Every
+  link, script and icon reference in this repo is relative, and the four module
+  `manifest.json` files use `"start_url": "./"` for the same reason. **Do not
+  change any of these to absolute `/...` paths** — that would break the
+  installed PWA and every module page.
+- `.nojekyll` at the repo root tells Pages to serve the tree verbatim instead of
+  running it through Jekyll.
+- The repo is **public**, which free GitHub Pages requires. Everything in it is
+  world-readable, so treat every value you paste into a source file as published
+  — see §11.
+
+### Option B — Cloudflare Workers
 
 The portal ships as static assets served by a Cloudflare Worker. Configuration
 lives in `wrangler.toml`:
@@ -355,15 +410,15 @@ Skip this section until SpinPro's domain is on Cloudflare. The domain must be a
 3. Confirm under **Workers & Pages → spinpro → Settings → Domains & Routes**
    that the hostname is listed and Active.
 4. Set the Supabase **Site URL** and redirect URLs to the same origin (§3.5),
-   and search the repo for `portal.spinproengineering.com` — the placeholder
-   domain is baked into the email notification links in `po/`, `cashclaim/`,
-   `staffclaim/` and `leave/`.
+   and search the repo for `github.io/Spinpro` — the current Pages origin is
+   baked into the email notification links in `po/`, `cashclaim/`,
+   `staffclaim/` and `leave/`, plus `robots.txt` and `sitemap.xml`.
 
 > Every hostname the portal answers on must be listed in `wrangler.toml`: on each
 > deploy Cloudflare reconciles the Worker's domains to exactly that list, so a
 > domain added only in the dashboard is removed on the next deploy.
 
-### Option B — Netlify
+### Option C — Netlify
 
 ```bash
 # Install Netlify CLI
@@ -375,17 +430,11 @@ netlify deploy --prod --dir .
 
 Or connect the GitHub repo in Netlify UI → it auto-deploys on push.
 
-### Option C — Vercel
+### Option D — Vercel
 
 ```bash
 npx vercel --prod
 ```
-
-### Option D — GitHub Pages
-
-1. Go to repo Settings → Pages
-2. Set source to branch `main` (or your production branch), folder `/root`
-3. Your site will be at `https://<your-github-user>.github.io/Spinpro/`
 
 ### Option E — Any static host / nginx
 
@@ -420,10 +469,48 @@ Carry-forward: max 5 days from previous year (enabled from 2025 cycle onwards).
 
 ## 11. Security Notes
 
-- Never commit real API keys or Supabase credentials to git
-- Use environment variables or a `.env` file (excluded from git) if using a build tool
-- For production, restrict Supabase RLS policies to enforce per-user data access
-- The `ADMIN_EMAILS` array is client-side only — use Supabase RLS for true server-side authorization
+**This repository is public.** Everything committed here is world-readable and
+permanently in the git history — deleting a file later does not unpublish it.
+That is a deliberate trade for free GitHub Pages hosting, but it changes what is
+safe to paste into a source file.
+
+### The Gemini API key is the one real hazard
+
+`staffclaim/index.html` splits the key across two variables:
+
+```javascript
+const K1 = 'YOUR_GEMINI'; const K2 = '_API_KEY';
+const GEMINI_API_KEY = K1 + K2;
+```
+
+That split defeats **GitHub's own secret scanning**, so if you paste a live key
+here GitHub will not warn you and push protection will not stop you. Meanwhile
+bots continuously scrape public repos for `AIza...` strings and abuse what they
+find, usually within minutes, billed to your Google Cloud project.
+
+Before putting a real key in, do one of these:
+
+- **Restrict the key** in Google Cloud Console → Credentials → API restrictions:
+  limit it to the Generative Language API, and add an HTTP-referrer restriction
+  for `https://hiufsitake.github.io/*`. A restricted key is far less useful to a
+  scraper. This is the minimum.
+- **Proxy it** — move the Gemini call behind a Supabase Edge Function that holds
+  the key server-side. The browser never sees it. This is the only approach that
+  genuinely protects the key.
+- **Make the repo private** and host on Cloudflare Workers (§8 Option B) instead.
+
+Set a billing budget and alert on the Google Cloud project either way.
+
+### The rest
+
+- The Supabase **anon** key is safe to publish — it ships to every browser by
+  design. Your data is protected by Row Level Security, not by that key's
+  secrecy. This makes §3.4 load-bearing: get the RLS policies right.
+- Never commit the Supabase **service_role** key or a Cloudflare API token. Those
+  bypass RLS and control your account.
+- The `ADMIN_EMAILS` array is client-side only — anyone can read it and edit
+  their local copy. Use Supabase RLS for real server-side authorization.
+- Staff names, emails and company details in this repo are public once committed.
 
 ---
 
@@ -437,14 +524,14 @@ each occurrence.
 | `YOUR_SUPABASE_URL` | `index.html`, `po/`, `cashclaim/`, `staffclaim/`, `leave/`, `settings/` |
 | `YOUR_SUPABASE_ANON_KEY` | same six files |
 | `YOUR_SUPABASE_PROJECT_REF` | `index.html` (auth-token storage key), `.github/workflows/prevent-supabase-pause.yml` |
-| `YOUR_GEMINI` + `_API_KEY` | `staffclaim/index.html` (`K1`/`K2`) |
+| *(none — Gemini key removed; see §5)* | — |
 | `YOUR_EMAILJS_SERVICE_ID` | `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
 | `YOUR_EMAILJS_TEMPLATE_ID` | same four files |
 | `YOUR_EMAILJS_PUBLIC_KEY` | same four files |
 | `YOUR_ADMIN_EMAIL` | `index.html`, `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
 | `YOUR_FINANCE_EMAIL` | `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
 | `YOUR_COMPANY_EMAIL`, `YOUR_COMPANY_ADDRESS`, `YOUR_COMPANY_TEL`, `YOUR_SSM_REG_NUMBER` | `CO` object in `po/`, `cashclaim/`, `staffclaim/` |
-| `portal.spinproengineering.com` | email notification links in `po/`, `cashclaim/`, `staffclaim/`, `leave/`; `robots.txt`; `sitemap.xml` |
+| `https://hiufsitake.github.io/Spinpro` (current origin) | email notification links in `po/`, `cashclaim/`, `staffclaim/`, `leave/`; `robots.txt`; `sitemap.xml` — update all of these if you move off Pages |
 
 Then:
 

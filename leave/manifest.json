@@ -1,7 +1,8 @@
 {
   "name": "SpinPro Leave System",
   "short_name": "SPN Leave",
-  "start_url": "/leave/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0d5339",

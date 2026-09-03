@@ -293,7 +293,7 @@ async function notifyLeave(title, color, to_email, to_name, html_body, remark, c
     await emailjs.send(EMAIL_SERVICE, EMAIL_TEMPLATE, {
       system_name: 'SPINPRO LEAVE', to_email, to_name: to_name || to_email.split('@')[0],
       header_bg: color, title, html_body, remark_text: remark,
-      cta_url: 'https://portal.spinproengineering.com/leave/', cta_label: cta_label || 'Open SpinPro Portal'
+      cta_url: 'https://hiufsitake.github.io/Spinpro/leave/', cta_label: cta_label || 'Open SpinPro Portal'
     });
   } catch (e) { console.error('Leave email failed:', e); }
 }
