@@ -289,9 +289,9 @@ const PORTAL_URL = window.location.origin + window.location.pathname.replace(/[^
 const ADMIN_EMAILS = ['spinproengineering@gmail.com'];
 
 // ===== EmailJS (SpinPro) — leave notifications =====
-const EMAIL_SERVICE  = 'YOUR_EMAILJS_SERVICE_ID';
-const EMAIL_TEMPLATE = 'YOUR_EMAILJS_TEMPLATE_ID';
-const EMAIL_KEY      = 'YOUR_EMAILJS_PUBLIC_KEY';
+const EMAIL_SERVICE  = 'service_zytsygg';
+const EMAIL_TEMPLATE = 'template_tgivglk';
+const EMAIL_KEY      = 'aws-Hq2Z0cS35IBFX';
 try { if (typeof emailjs !== 'undefined') emailjs.init(EMAIL_KEY); } catch (e) { console.error('EmailJS init failed', e); }
 const mkRow = (l, v) => `<tr><td style="padding:12px 0;border-bottom:1px solid #eef2f6;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">${l}</td><td style="padding:12px 0;border-bottom:1px solid #eef2f6;color:#0f172a;font-size:14px;font-weight:800;text-align:right">${v}</td></tr>`;
 async function notifyLeave(title, color, to_email, to_name, html_body, remark, cta_label) {

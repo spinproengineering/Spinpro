@@ -212,21 +212,45 @@ whether the repo is public.
 
 ## 6. EmailJS (Email Notifications)
 
-EmailJS sends notifications when claims/POs are submitted or approved.
+EmailJS sends the approval notifications raised by `po/`, `cashclaim/`,
+`staffclaim/` and `leave/`.
 
-1. Create account at [emailjs.com](https://www.emailjs.com)
-2. Add an **Email Service** (Gmail, Outlook, etc.)
-3. Create **Email Templates** for:
-   - Submission confirmation (to claimant)
-   - Approval/rejection notification (to claimant)
-   - New submission alert (to admin)
-4. In each `index.html`, replace:
+All four modules share **one** service, **one** template and **one** public
+key, set as `EMAIL_SERVICE`, `EMAIL_TEMPLATE` and `EMAIL_KEY` near the top of
+each module's script block.
 
-```javascript
-const EMAILJS_SERVICE  = 'YOUR_EMAILJS_SERVICE_ID';
-const EMAILJS_TEMPLATE = 'YOUR_EMAILJS_TEMPLATE_ID';
-const EMAILJS_KEY      = 'YOUR_EMAILJS_PUBLIC_KEY';
-```
+1. Create an account at [emailjs.com](https://www.emailjs.com).
+2. **Email Services** -> add a service and copy the **Service ID**.
+3. **Email Templates** -> create one template and copy the **Template ID**.
+   In the template's settings set **To Email** to `{{to_email}}`; the portal
+   supplies the recipient per send, so a literal address there misdirects
+   every notification.
+4. **Account -> General** -> copy the **Public Key**.
+5. Replace the three constants in all four modules.
+
+The template receives nine variables:
+
+| Variable | Contents |
+|---|---|
+| `to_email` | Recipient, one approver per send |
+| `to_name` | Recipient label |
+| `system_name` | Module name, e.g. `SPINPRO CASH CLAIM` |
+| `title` | Event, e.g. `New Staff Claim` |
+| `header_bg` | Module accent colour |
+| `html_body` | Detail rows as raw `<tr><td>` markup |
+| `remark_text` | One-line summary |
+| `cta_url` | Link back to the module, derived at runtime |
+| `cta_label` | Button text |
+
+Reference `html_body` as `{{{html_body}}}` with **three** braces. It carries
+raw HTML, and two braces escape it into visible tags.
+
+Not every module sends all nine: PO omits `title` and `to_name`, Leave omits
+`html_body`. Unused variables render empty.
+
+The public key ships in the page source, which is how EmailJS works in the
+browser. Restrict it under **Account -> Security** to the domain serving the
+portal.
 
 ---
 
