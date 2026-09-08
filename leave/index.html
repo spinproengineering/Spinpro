@@ -341,6 +341,7 @@ async function init() {
   setDefaultDates();
   await loadBalance();
   lucide.createIcons();
+  loadReviewDot();
 
   // Inactivity timer 15 min
   let timer;
@@ -657,8 +658,34 @@ async function loadAdminData() {
   await Promise.all([loadPending(), loadAdminRecords()]);
 }
 
+// Red dot on the Admin tab when leave applications are waiting. Admins see every
+// pending application; everyone else sees only their own. The dot sits inside the
+// button because the tab strip is overflow-x-auto and would clip it.
+async function loadReviewDot() {
+  try {
+    if (!currentUser?.email) return;
+    let q = sb.from('logs').select('id', { count: 'exact', head: true }).eq('status', 'Pending');
+    if (!isAdmin) q = q.eq('email', currentUser.email);
+    const { count } = await q;
+    // Admins review on the Admin tab; everyone else tracks their own on My Leaves,
+    // which is where they can actually see them -- nav-admin is hidden for them.
+    const tab = document.getElementById(isAdmin ? 'nav-admin' : 'nav-status');
+    if (!tab) return;
+    tab.classList.add('relative');
+    const existing = tab.querySelector('.pending-dot');
+    if (count > 0 && !existing) {
+      const dot = document.createElement('span');
+      dot.className = 'pending-dot absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full';
+      tab.appendChild(dot);
+    } else if (!(count > 0) && existing) {
+      existing.remove();
+    }
+  } catch (e) { /* silent */ }
+}
+
 async function loadPending() {
   const { data } = await sb.from('logs').select('*').eq('status', 'Pending').order('applied_at');
+  loadReviewDot();
   const el = document.getElementById('pendingTable');
   document.getElementById('pendingCount').textContent = `${(data||[]).length} pending`;
   if (!data?.length) {

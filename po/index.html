@@ -316,6 +316,7 @@
             addItemRow();
             await setAutoPONumber();
             lucide.createIcons();
+            loadReviewDot();
 
             // Deep-link from email buttons: /po/#review, #history, #create
             const hash = (location.hash || '').replace('#', '');
@@ -464,7 +465,35 @@
                 renderReview();
                 renderHistory();
             }
+            loadReviewDot();
         }
+
+        // Red dot on the Review tab when items are waiting. Admins see every
+        // pending item; everyone else sees only their own. The dot sits inside the
+        // button because the tab strip is overflow-x-auto and would clip it.
+        async function loadReviewDot() {
+            try {
+                const { data } = await supabaseClient.auth.getSession();
+                const email = data?.session?.user?.email;
+                if (!email) return;
+                const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+                let q = supabaseClient.from('po_logs').select('id', { count: 'exact', head: true }).eq('status', 'Pending');
+                if (!isAdmin) q = q.eq('req_email', email);
+                const { count } = await q;
+                const tab = document.getElementById('nav-review');
+                if (!tab) return;
+                tab.classList.add('relative');
+                const existing = tab.querySelector('.pending-dot');
+                if (count > 0 && !existing) {
+                    const dot = document.createElement('span');
+                    dot.className = 'pending-dot absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full';
+                    tab.appendChild(dot);
+                } else if (!(count > 0) && existing) {
+                    existing.remove();
+                }
+            } catch (e) { /* silent */ }
+        }
+
 
         function renderReview() {
             const pendingPOs = currentPOs.filter(p => p.status === 'Pending');

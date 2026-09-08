@@ -201,7 +201,7 @@
                 if(session?.user){currentApproverInitials=APPROVER_MAP[session.user.email]||session.user.email.split('@')[0].toUpperCase().substring(0,3);fillClaimantData(session.user.email);}
             } catch(e){ console.error('Auth check failed:', e); }
             try { if(typeof emailjs!=='undefined') emailjs.init(EMAIL_KEY); } catch(e){ console.error('EmailJS init failed:', e); }
-            addItemRow();setAutoSCNumber();setupDropZone();lucide.createIcons();
+            addItemRow();setAutoSCNumber();setupDropZone();lucide.createIcons();loadReviewDot();
         }
 
         async function fillClaimantData(email){
@@ -288,7 +288,35 @@
             const{data}=await supabaseClient.from('staff_claims').select('*').order('created_at',{ascending:false});
             currentClaims=data||[];
             renderReview();renderHistory();
+            loadReviewDot();
         }
+
+        // Red dot on the Review tab when items are waiting. Admins see every
+        // pending item; everyone else sees only their own. The dot sits inside the
+        // button because the tab strip is overflow-x-auto and would clip it.
+        async function loadReviewDot() {
+            try {
+                const { data } = await supabaseClient.auth.getSession();
+                const email = data?.session?.user?.email;
+                if (!email) return;
+                const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+                let q = supabaseClient.from('staff_claims').select('id', { count: 'exact', head: true }).eq('status', 'Pending');
+                if (!isAdmin) q = q.eq('staff_email', email);
+                const { count } = await q;
+                const tab = document.getElementById('nav-review');
+                if (!tab) return;
+                tab.classList.add('relative');
+                const existing = tab.querySelector('.pending-dot');
+                if (count > 0 && !existing) {
+                    const dot = document.createElement('span');
+                    dot.className = 'pending-dot absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full';
+                    tab.appendChild(dot);
+                } else if (!(count > 0) && existing) {
+                    existing.remove();
+                }
+            } catch (e) { /* silent */ }
+        }
+
 
         function renderReview(){
             document.getElementById('review-list').innerHTML=currentClaims.filter(c=>c.status==='Pending').map(pc=>`
