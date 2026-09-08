@@ -245,8 +245,7 @@ The template receives nine variables:
 Reference `html_body` as `{{{html_body}}}` with **three** braces. It carries
 raw HTML, and two braces escape it into visible tags.
 
-Not every module sends all nine: PO omits `title` and `to_name`, Leave omits
-`html_body`. Unused variables render empty.
+All four modules send all nine variables on every notification.
 
 The public key ships in the page source, which is how EmailJS works in the
 browser. Restrict it under **Account -> Security** to the domain serving the
