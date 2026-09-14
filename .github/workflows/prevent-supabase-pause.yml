@@ -22,23 +22,42 @@ jobs:
             exit 0
           fi
 
-          echo "Pinging Supabase Project: $PROJECT_ID..."
-          
+          URL="https://$PROJECT_ID.supabase.co/rest/v1/settings?select=key&limit=1"
           RESPONSE_FILE=$(mktemp)
-          
-          HTTP_STATUS=$(curl -s -w "%{http_code}" \
-            -o "$RESPONSE_FILE" \
-            -X GET "https://$PROJECT_ID.supabase.co/rest/v1/settings?select=key&limit=1" \
-            -H "apikey: $SUPABASE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_KEY")
+          ATTEMPTS=3
 
-          RESPONSE_BODY=$(cat "$RESPONSE_FILE")
+          echo "Pinging Supabase Project: $PROJECT_ID..."
 
-          # Accepting 200-499 as successful activity
-          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 500 ]; then
-            echo "Success! Activity logged. Status: $HTTP_STATUS"
-          else
-            echo "FAILED! Status: $HTTP_STATUS"
-            echo "Details: $RESPONSE_BODY"
-            exit 1
-          fi
+          # Supabase's gateway returns an occasional 504, and a single blip used to
+          # fail the whole run and mail out an alert. Retry before concluding the
+          # project is actually unreachable. Note a 5xx still reached Supabase, so it
+          # counts as activity for pause prevention either way -- these retries are
+          # about not crying wolf, not about keeping the project awake.
+          for i in $(seq 1 "$ATTEMPTS"); do
+            HTTP_STATUS=$(curl -s -w "%{http_code}" \
+              -o "$RESPONSE_FILE" \
+              --max-time 30 \
+              -X GET "$URL" \
+              -H "apikey: $SUPABASE_KEY" \
+              -H "Authorization: Bearer $SUPABASE_KEY" || echo "000")
+
+            # curl can die mid-write and leave a partial body where the code should be.
+            case "$HTTP_STATUS" in ''|*[!0-9]*) HTTP_STATUS=000 ;; esac
+
+            # Anything the origin answers -- 4xx included -- is a live database.
+            if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 500 ]; then
+              echo "Success! Activity logged. Status: $HTTP_STATUS (attempt $i/$ATTEMPTS)"
+              exit 0
+            fi
+
+            echo "Attempt $i/$ATTEMPTS failed. Status: $HTTP_STATUS"
+            echo "Details: $(cat "$RESPONSE_FILE")"
+
+            if [ "$i" -lt "$ATTEMPTS" ]; then
+              sleep $((i * 15))
+            fi
+          done
+
+          echo "FAILED! Supabase did not answer across $ATTEMPTS attempts."
+          echo "000 means the request never completed; 5xx means the gateway refused it."
+          exit 1
