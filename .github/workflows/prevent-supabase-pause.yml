@@ -58,6 +58,20 @@ jobs:
             fi
           done
 
-          echo "FAILED! Supabase did not answer across $ATTEMPTS attempts."
-          echo "000 means the request never completed; 5xx means the gateway refused it."
-          exit 1
+          # Deliberately not a failure. Supabase pauses a free project after about
+          # seven days of inactivity -- roughly 168 consecutive missed pings -- so one
+          # bad run has no consequence and the next hourly run covers it. Failing here
+          # only produced alert mail for a blip nobody needed to act on.
+          #
+          # It is still recorded: ::warning:: annotates the run in the Actions UI and
+          # the summary below shows on the run page, neither of which sends mail. If
+          # the portal itself ever stops working, that is the signal worth acting on.
+          echo "::warning::Supabase did not answer across $ATTEMPTS attempts (last status $HTTP_STATUS). Not failing the run -- a single missed ping cannot pause the project."
+          {
+            echo "### Keep-alive ping did not land"
+            echo ""
+            echo "- Attempts: \`$ATTEMPTS\`"
+            echo "- Last status: \`$HTTP_STATUS\` (000 = request never completed, 5xx = gateway refused)"
+            echo "- Not treated as a failure: pausing needs ~7 days of inactivity, so the next hourly run covers this."
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 0
