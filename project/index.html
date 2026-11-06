@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="icon" href="../logo.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../vendor/supabase-js.min.js"></script>
+    <title>SpinPro | Projects</title>
+
+    <script>
+        document.documentElement.style.display = 'none';
+        const GUARD_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
+        const GUARD_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
+
+        const guardClient = supabase.createClient(GUARD_URL, GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+        async function checkSession() {
+            const { data: { session } } = await guardClient.auth.getSession();
+            if (!session) window.location.href = '../index.html';
+            else document.documentElement.style.display = '';
+        }
+        checkSession();
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; padding-bottom: env(safe-area-inset-bottom); }
+        .input-box { border: 2px solid #f1f5f9; padding: 1rem; border-radius: 1.25rem; background: #f8fafc; font-weight: 700; width: 100%; outline: none; transition: all 0.2s; font-size: 16px; }
+        .input-box:focus { border-color: #0e6091; background: white; }
+        .tab-active { background: #0e6091; color: #fff; }
+        .bar { height: 6px; border-radius: 999px; background: #eef2f6; overflow: hidden; }
+        .bar > span { display: block; height: 100%; border-radius: 999px; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 text-slate-900 font-medium">
+
+    <nav class="bg-white p-5 sticky top-0 z-50 shadow-sm border-b border-slate-100">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="../index.html" class="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-all">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div>
+                    <h1 class="font-black text-slate-800 text-sm uppercase tracking-tight leading-none">SpinPro <span class="text-[#0e6091]">Projects</span></h1>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Project Register</p>
+                </div>
+            </div>
+            <div class="flex bg-slate-50 p-1.5 rounded-2xl gap-1 overflow-x-auto border border-slate-100">
+                <button onclick="switchTab('list')" id="nav-list" class="px-4 py-2 rounded-xl text-[10px] font-bold tab-active uppercase transition-all tracking-widest">Projects</button>
+                <button onclick="switchTab('add')" id="nav-add" class="px-4 py-2 rounded-xl text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase transition-all tracking-widest hidden">Add New</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto p-4 mt-6">
+
+        <!-- ============ LIST ============ -->
+        <div id="tab-list" class="space-y-5">
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-white p-4 rounded-[1.5rem] border border-slate-200 shadow-sm">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Projects</p>
+                    <p id="stat-count" class="text-xl font-black text-slate-800 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-[1.5rem] border border-slate-200 shadow-sm">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Ongoing</p>
+                    <p id="stat-ongoing" class="text-xl font-black text-[#0e6091] mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-[1.5rem] border border-slate-200 shadow-sm">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Done</p>
+                    <p id="stat-done" class="text-xl font-black text-[#5aa84e] mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-[1.5rem] border border-slate-200 shadow-sm">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400">Total Value</p>
+                    <p id="stat-value" class="text-xl font-black text-slate-800 mt-1">RM 0.00</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2 items-center">
+                <input type="text" id="filter-text" oninput="renderTable()" placeholder="Search project, client, description…"
+                       class="flex-1 min-w-[200px] bg-white border-2 border-slate-100 focus:border-[#0e6091] rounded-2xl px-4 py-2.5 text-xs font-bold outline-none">
+                <select id="filter-status" onchange="renderTable()" class="bg-white border-2 border-slate-100 rounded-2xl px-3 py-2.5 text-[10px] font-black uppercase tracking-widest outline-none">
+                    <option value="">All Status</option>
+                    <option value="ONGOING">Ongoing</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="DONE">Done</option>
+                </select>
+                <button onclick="exportCSV()" class="bg-white border-2 border-slate-100 hover:border-[#0e6091] rounded-2xl px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-500 transition-all">Export CSV</button>
+            </div>
+
+            <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-slate-400">
+                                <th class="text-left font-black uppercase tracking-widest text-[9px] p-4">Project</th>
+                                <th class="text-left font-black uppercase tracking-widest text-[9px] p-4">Client</th>
+                                <th class="text-right font-black uppercase tracking-widest text-[9px] p-4">Value</th>
+                                <th class="text-left font-black uppercase tracking-widest text-[9px] p-4">Status</th>
+                                <th class="text-left font-black uppercase tracking-widest text-[9px] p-4 w-32">Invoiced</th>
+                                <th class="text-left font-black uppercase tracking-widest text-[9px] p-4 w-32">Paid</th>
+                                <th class="text-right font-black uppercase tracking-widest text-[9px] p-4"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body"></tbody>
+                    </table>
+                </div>
+                <div id="empty-state" class="hidden text-center py-12 text-slate-400 text-xs font-bold">No projects yet.</div>
+            </div>
+        </div>
+
+        <!-- ============ ADD / EDIT (admin only) ============ -->
+        <div id="tab-add" class="hidden">
+            <section class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm max-w-2xl mx-auto">
+                <h2 id="form-title" class="font-black text-slate-800 uppercase text-xs tracking-widest mb-5">New Project</h2>
+                <form id="project-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="number" id="p-year" placeholder="Year" class="input-box" required>
+                        <input type="text" id="p-no" placeholder="Project No" class="input-box" required>
+                    </div>
+                    <input type="text" id="p-client" placeholder="Client Name" class="input-box" required>
+                    <textarea id="p-desc" placeholder="Description" rows="2" class="input-box"></textarea>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="number" step="0.01" min="0" id="p-value" placeholder="Value (RM)" class="input-box" required>
+                        <select id="p-po" class="input-box font-bold">
+                            <option value="false">Has PO: No</option>
+                            <option value="true">Has PO: Yes</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <select id="p-status" class="input-box font-bold">
+                            <option value="ONGOING">Ongoing</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="DONE">Done</option>
+                        </select>
+                        <input type="number" id="p-inv" min="0" max="100" placeholder="Invoiced %" class="input-box">
+                        <input type="number" id="p-pay" min="0" max="100" placeholder="Paid %" class="input-box">
+                    </div>
+                    <textarea id="p-remark" placeholder="Remark" rows="2" class="input-box"></textarea>
+                    <p id="form-msg" class="hidden text-xs font-bold bg-red-50 text-red-500 p-3 rounded-xl"></p>
+                    <div class="flex gap-3">
+                        <button type="submit" id="submit-btn" class="flex-1 bg-[#0e6091] text-white font-black p-5 rounded-[2rem] shadow-xl uppercase tracking-widest text-xs hover:opacity-90 transition-all">Save Project</button>
+                        <button type="button" onclick="cancelEdit()" id="cancel-btn" class="hidden px-6 bg-slate-100 text-slate-500 font-black rounded-[2rem] uppercase tracking-widest text-xs">Cancel</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <!-- Shown to non-admins who reach the add tab -->
+        <div id="auth-lock-screen" class="hidden text-center py-16">
+            <p class="font-black text-slate-800 text-sm uppercase tracking-widest">Admins only</p>
+            <p class="text-xs text-slate-400 font-bold mt-2">Projects can be viewed by everyone but only changed by an admin.</p>
+        </div>
+    </main>
+
+    <script>
+        // ============================================================
+        // CONFIGURATION
+        // ============================================================
+        const SUPABASE_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
+
+        const ADMIN_EMAILS = ['spinproengineering@gmail.com'];
+
+        let currentProjects = [];
+        let editingId = null;
+        let isAuthorized = false;
+
+        const formatRM = (n) => parseFloat(n || 0).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        async function init() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && ADMIN_EMAILS.includes((session.user.email || '').toLowerCase())) {
+                isAuthorized = true;
+                document.getElementById('nav-add').classList.remove('hidden');
+            }
+            document.getElementById('p-year').value = new Date().getFullYear();
+            await fetchProjects();
+            lucide.createIcons();
+        }
+
+        function switchTab(tab) {
+            if (tab === 'add' && !isAuthorized) {
+                document.getElementById('tab-list').classList.add('hidden');
+                document.getElementById('tab-add').classList.add('hidden');
+                document.getElementById('auth-lock-screen').classList.remove('hidden');
+            } else {
+                document.getElementById('auth-lock-screen').classList.add('hidden');
+                document.getElementById('tab-list').classList.toggle('hidden', tab !== 'list');
+                document.getElementById('tab-add').classList.toggle('hidden', tab !== 'add');
+            }
+            document.querySelectorAll('nav button').forEach(b => {
+                b.classList.remove('tab-active');
+                b.classList.add('text-slate-400');
+            });
+            const active = document.getElementById('nav-' + tab);
+            if (active) { active.classList.add('tab-active'); active.classList.remove('text-slate-400'); }
+            lucide.createIcons();
+        }
+
+        // ============================================================
+        // DATA
+        // ============================================================
+        async function fetchProjects() {
+            const { data, error } = await supabaseClient
+                .from('project_logs')
+                .select('*')
+                .order('year', { ascending: false })
+                .order('project_no', { ascending: false });
+            if (!error) currentProjects = data || [];
+            renderTable();
+        }
+
+        function visibleProjects() {
+            const q = document.getElementById('filter-text').value.trim().toLowerCase();
+            const st = document.getElementById('filter-status').value;
+            return currentProjects.filter(p => {
+                if (st && p.status !== st) return false;
+                if (!q) return true;
+                return [p.project_no, p.client_name, p.description, p.remark]
+                    .some(v => String(v || '').toLowerCase().includes(q));
+            });
+        }
+
+        function renderTable() {
+            const rows = visibleProjects();
+            const tbody = document.getElementById('table-body');
+            const empty = document.getElementById('empty-state');
+
+            document.getElementById('stat-count').textContent   = currentProjects.length;
+            document.getElementById('stat-ongoing').textContent = currentProjects.filter(p => p.status === 'ONGOING').length;
+            document.getElementById('stat-done').textContent    = currentProjects.filter(p => p.status === 'DONE').length;
+            document.getElementById('stat-value').textContent   = 'RM ' + formatRM(currentProjects.reduce((s, p) => s + parseFloat(p.value || 0), 0));
+
+            empty.classList.toggle('hidden', rows.length > 0);
+
+            const badge = { ONGOING: 'bg-[#0e6091]', PENDING: 'bg-amber-500', DONE: 'bg-[#5aa84e]' };
+            const pct = (v, colour) => {
+                const n = Math.max(0, Math.min(100, parseInt(v || 0, 10)));
+                return `<div class="bar"><span style="width:${n}%;background:${colour}"></span></div>
+                        <span class="text-[9px] font-black text-slate-400">${n}%</span>`;
+            };
+
+            tbody.innerHTML = rows.map(p => `
+                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                    <td class="p-4">
+                        <p class="font-black text-slate-800">${esc(p.project_no)}</p>
+                        <p class="text-[10px] text-slate-400 font-bold">${esc(p.year || '')}${p.has_po ? ' · PO' : ''}</p>
+                        ${p.description ? `<p class="text-[10px] text-slate-400 mt-1">${esc(p.description)}</p>` : ''}
+                    </td>
+                    <td class="p-4 font-bold text-slate-600">${esc(p.client_name)}</td>
+                    <td class="p-4 text-right font-black text-slate-800 whitespace-nowrap">RM ${formatRM(p.value)}</td>
+                    <td class="p-4"><span class="${badge[p.status] || 'bg-slate-400'} text-white px-2.5 py-1 rounded-lg font-black text-[9px] uppercase tracking-widest">${esc(p.status)}</span></td>
+                    <td class="p-4">${pct(p.invoice_pct, '#17798d')}</td>
+                    <td class="p-4">${pct(p.payment_pct, '#5aa84e')}</td>
+                    <td class="p-4 text-right whitespace-nowrap">
+                        ${isAuthorized ? `
+                            <button onclick="editProject(${p.id})" class="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-all"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="deleteProject(${p.id})" class="p-2 bg-white border border-red-100 text-red-400 rounded-xl hover:bg-red-50 transition-all"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        ` : ''}
+                    </td>
+                </tr>`).join('');
+
+            lucide.createIcons();
+        }
+
+        // ============================================================
+        // CREATE / EDIT / DELETE  (admin only; RLS enforces it too)
+        // ============================================================
+        document.getElementById('project-form').onsubmit = async function (e) {
+            e.preventDefault();
+            const msg = document.getElementById('form-msg');
+            const btn = document.getElementById('submit-btn');
+            msg.classList.add('hidden');
+            btn.disabled = true;
+
+            const clampPct = (id) => {
+                const raw = document.getElementById(id).value;
+                if (raw === '') return 0;
+                return Math.max(0, Math.min(100, parseInt(raw, 10) || 0));
+            };
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const payload = {
+                year:        parseInt(document.getElementById('p-year').value, 10) || null,
+                project_no:  document.getElementById('p-no').value.trim(),
+                client_name: document.getElementById('p-client').value.trim(),
+                description: document.getElementById('p-desc').value.trim(),
+                value:       parseFloat(document.getElementById('p-value').value) || 0,
+                has_po:      document.getElementById('p-po').value === 'true',
+                status:      document.getElementById('p-status').value,
+                invoice_pct: clampPct('p-inv'),
+                payment_pct: clampPct('p-pay'),
+                remark:      document.getElementById('p-remark').value.trim()
+            };
+            if (!editingId) payload.created_by = session?.user?.email || '';
+
+            const { error } = editingId
+                ? await supabaseClient.from('project_logs').update(payload).eq('id', editingId)
+                : await supabaseClient.from('project_logs').insert(payload);
+
+            btn.disabled = false;
+
+            if (error) {
+                // 23505 is the unique index on project_no; anything else is worth showing raw.
+                msg.textContent = error.code === '23505'
+                    ? 'Project No "' + payload.project_no + '" already exists.'
+                    : 'Could not save: ' + error.message;
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            cancelEdit();
+            await fetchProjects();
+            switchTab('list');
+        };
+
+        function editProject(id) {
+            const p = currentProjects.find(x => x.id === id);
+            if (!p) return;
+            editingId = id;
+            document.getElementById('p-year').value    = p.year || '';
+            document.getElementById('p-no').value      = p.project_no || '';
+            document.getElementById('p-client').value  = p.client_name || '';
+            document.getElementById('p-desc').value    = p.description || '';
+            document.getElementById('p-value').value   = p.value || '';
+            document.getElementById('p-po').value      = p.has_po ? 'true' : 'false';
+            document.getElementById('p-status').value  = p.status || 'ONGOING';
+            document.getElementById('p-inv').value     = p.invoice_pct ?? 0;
+            document.getElementById('p-pay').value     = p.payment_pct ?? 0;
+            document.getElementById('p-remark').value  = p.remark || '';
+            document.getElementById('form-title').textContent = 'Edit Project';
+            document.getElementById('cancel-btn').classList.remove('hidden');
+            switchTab('add');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingId = null;
+            document.getElementById('project-form').reset();
+            document.getElementById('p-year').value = new Date().getFullYear();
+            document.getElementById('form-title').textContent = 'New Project';
+            document.getElementById('form-msg').classList.add('hidden');
+            document.getElementById('cancel-btn').classList.add('hidden');
+        }
+
+        async function deleteProject(id) {
+            const p = currentProjects.find(x => x.id === id);
+            if (!confirm('Delete project ' + (p ? p.project_no : id) + '? This cannot be undone.')) return;
+            const { error } = await supabaseClient.from('project_logs').delete().eq('id', id);
+            if (error) { alert('Could not delete: ' + error.message); return; }
+            await fetchProjects();
+        }
+
+        // ============================================================
+        // EXPORT
+        // ============================================================
+        function exportCSV() {
+            const rows = visibleProjects();
+            if (!rows.length) { alert('Nothing to export.'); return; }
+            const cols = ['year','project_no','client_name','description','value','has_po','status','invoice_pct','payment_pct','remark'];
+            // Quote every field and double embedded quotes: descriptions and
+            // remarks are free text and routinely contain commas.
+            const cell = (v) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+            const csv = [cols.map(cell).join(',')]
+                .concat(rows.map(r => cols.map(c => cell(r[c])).join(',')))
+                .join('\r\n');
+            // Excel reads a bare UTF-8 CSV as ANSI, so lead with a BOM.
+            const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'spinpro-projects-' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

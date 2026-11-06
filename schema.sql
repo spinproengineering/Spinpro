@@ -101,6 +101,27 @@ CREATE TABLE IF NOT EXISTS logs (
   approved_at   TIMESTAMPTZ
 );
 
+-- Projects. Company reference data rather than a per-user submission:
+-- everyone signed in can read it, only admins may change it. invoice_pct
+-- and payment_pct are completion percentages, so they are integers here
+-- rather than the misleading *_status names the same fields carry in the
+-- portal this module was modelled on.
+CREATE TABLE IF NOT EXISTS project_logs (
+  id           BIGSERIAL PRIMARY KEY,
+  year         INTEGER,
+  project_no   TEXT UNIQUE NOT NULL,
+  client_name  TEXT,
+  description  TEXT,
+  value        NUMERIC(14,2) DEFAULT 0,
+  has_po       BOOLEAN DEFAULT FALSE,
+  status       TEXT DEFAULT 'ONGOING',
+  invoice_pct  INTEGER DEFAULT 0 CHECK (invoice_pct BETWEEN 0 AND 100),
+  payment_pct  INTEGER DEFAULT 0 CHECK (payment_pct BETWEEN 0 AND 100),
+  remark       TEXT,
+  created_by   TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Key/value config. Also the target of the portal keep-alive ping.
 CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
@@ -129,6 +150,8 @@ CREATE INDEX IF NOT EXISTS idx_sc_status     ON staff_claims(status);
 CREATE INDEX IF NOT EXISTS idx_logs_email    ON logs(email);
 CREATE INDEX IF NOT EXISTS idx_logs_year     ON logs(year);
 CREATE INDEX IF NOT EXISTS idx_logs_status   ON logs(status);
+CREATE INDEX IF NOT EXISTS idx_proj_status   ON project_logs(status);
+CREATE INDEX IF NOT EXISTS idx_proj_year     ON project_logs(year);
 
 -- ---------- 3. Helpers -------------------------------------
 
@@ -148,6 +171,7 @@ $$;
 -- so these policies -- not the key -- are what protect the data.
 
 ALTER TABLE staff        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE project_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE po_logs      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cash_claims  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_claims ENABLE ROW LEVEL SECURITY;
@@ -178,6 +202,17 @@ DROP POLICY IF EXISTS staff_read  ON staff;
 DROP POLICY IF EXISTS staff_write ON staff;
 CREATE POLICY staff_read  ON staff FOR SELECT TO authenticated USING (true);
 CREATE POLICY staff_write ON staff FOR ALL
+  USING (is_portal_admin()) WITH CHECK (is_portal_admin());
+
+-- project_logs: the project register is shared reference data, so every
+-- signed-in user reads it -- PO and claim forms name a project, and people
+-- need to see which exist. Only admins may add, change or remove one. This
+-- is deliberately not the per-submitter shape used by po_logs and the
+-- claims: a project is not something an individual files.
+DROP POLICY IF EXISTS proj_read  ON project_logs;
+DROP POLICY IF EXISTS proj_write ON project_logs;
+CREATE POLICY proj_read  ON project_logs FOR SELECT TO authenticated USING (true);
+CREATE POLICY proj_write ON project_logs FOR ALL
   USING (is_portal_admin()) WITH CHECK (is_portal_admin());
 
 -- Purchase Orders: submitters see and file their own; admins see all
