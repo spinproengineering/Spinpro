@@ -26,7 +26,7 @@ absolute `/...` paths break under Pages.
 
 ## Status
 
-Supabase is wired up (project `ugvehqkqsvolpdqwaggg`) and login is enforced on
+Supabase is wired up (project `oroaqmjtormublvaslpj`) and login is enforced on
 every page — there is no bypass. Run
 **[`supabase/schema.sql`](supabase/schema.sql)** in the Supabase SQL Editor to
 create the tables and RLS policies, then sign up with an admin address.

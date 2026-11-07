@@ -19,8 +19,8 @@
     <title>SpinPro | Staff Claim</title>
     <script>
         document.documentElement.style.display='none';
-        const GUARD_URL='https://ugvehqkqsvolpdqwaggg.supabase.co';
-        const GUARD_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
+        const GUARD_URL='https://oroaqmjtormublvaslpj.supabase.co';
+        const GUARD_KEY='sb_publishable_oMACTSKXQDpl54QLNe-vPg_gGeyO1KW';
 
         const guardClient=supabase.createClient(GUARD_URL,GUARD_KEY, { auth: { lock: async (_n, _t, fn) => await fn() } });
         async function checkSession(){const{data:{session}}=await guardClient.auth.getSession();if(!session)window.location.href='../index.html';else document.documentElement.style.display='';}
@@ -146,8 +146,8 @@
     </main>
 
     <script>
-        const SUPABASE_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
+        const SUPABASE_URL = 'https://oroaqmjtormublvaslpj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_oMACTSKXQDpl54QLNe-vPg_gGeyO1KW';
         const EMAIL_SERVICE  = 'service_zytsygg';
         const EMAIL_TEMPLATE = 'template_tgivglk';
         const EMAIL_KEY      = 'aws-Hq2Z0cS35IBFX';

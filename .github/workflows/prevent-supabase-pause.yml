@@ -13,7 +13,7 @@ jobs:
       - name: Ping Supabase Database
         env:
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          PROJECT_ID: ugvehqkqsvolpdqwaggg
+          PROJECT_ID: oroaqmjtormublvaslpj
         run: |
           # The SUPABASE_KEY repo secret (the anon key) is what remains optional:
           # skip instead of failing the run every hour until it is set.

@@ -468,9 +468,9 @@ each occurrence.
 
 | Placeholder | Files |
 |---|---|
-| ~~`YOUR_SUPABASE_URL`~~ | done — `https://ugvehqkqsvolpdqwaggg.supabase.co` |
+| ~~`YOUR_SUPABASE_URL`~~ | done — `https://oroaqmjtormublvaslpj.supabase.co` |
 | ~~`YOUR_SUPABASE_ANON_KEY`~~ | done |
-| ~~`YOUR_SUPABASE_PROJECT_REF`~~ | done — `ugvehqkqsvolpdqwaggg` |
+| ~~`YOUR_SUPABASE_PROJECT_REF`~~ | done — `oroaqmjtormublvaslpj` |
 | *(none — Gemini key removed; see §5)* | — |
 | `YOUR_EMAILJS_SERVICE_ID` | `po/`, `cashclaim/`, `staffclaim/`, `leave/` |
 | `YOUR_EMAILJS_TEMPLATE_ID` | same four files |

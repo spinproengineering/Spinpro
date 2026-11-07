@@ -163,8 +163,8 @@
         // CONFIGURATION — Replace with your Supabase project credentials
         // See SETUP.md for full setup instructions
         // ============================================================
-        const SUPABASE_URL = 'https://ugvehqkqsvolpdqwaggg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVndmVocWtxc3ZvbHBkcXdhZ2dnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzOTYwMzksImV4cCI6MjEwMzk3MjAzOX0.l_rC5helHO6GOwXs0h77CnueZ4umLy9JU1X8yEuG4q0';
+        const SUPABASE_URL = 'https://oroaqmjtormublvaslpj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_oMACTSKXQDpl54QLNe-vPg_gGeyO1KW';
         // ============================================================
 
 
@@ -172,7 +172,7 @@
         // If this tab has no active session, drop any stale auth token left in
         // localStorage BEFORE the client initialises. A leftover token makes
         // supabase-js fire a SIGNED_IN on load that used to deadlock the auth lock.
-        try { if (!sessionStorage.getItem('spn_tab_session')) localStorage.removeItem('sb-ugvehqkqsvolpdqwaggg-auth-token'); } catch {}
+        try { if (!sessionStorage.getItem('spn_tab_session')) localStorage.removeItem('sb-oroaqmjtormublvaslpj-auth-token'); } catch {}
         // supabase-js v2 serialises auth calls through an exclusive Web Lock
         // (navigator.locks); a reentrant acquire deadlocks it and freezes
         // signInWithPassword() on "Processing..." forever. We use one per-tab
