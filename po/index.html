@@ -706,7 +706,7 @@
                 return;
             }
             
-            const po = currentPOs.find(p => p.id === id);
+            const po = currentPOs.find(p => String(p.id) === String(id));
             
             const { error } = await supabaseClient
                 .from('po_logs')
@@ -743,7 +743,7 @@
         }
 
         function loadForEdit(id) {
-            const po = currentPOs.find(p => p.id === id);
+            const po = currentPOs.find(p => String(p.id) === String(id));
             if (!po) return;
             
             editingId = id;
@@ -940,7 +940,7 @@
         }
 
         function generatePDF(id) {
-            const po = currentPOs.find(p => p.id === id);
+            const po = currentPOs.find(p => String(p.id) === String(id));
             if (!po) return;
             
             buildPDF(po.po_number, po.date, po.supplier_name, po.supplier_contact, po.supplier_tel, po.project_ref, po.delivery_address, po.remarks, po.items || [], po.total, po.status, po.approved_by, po.approved_at, true);
